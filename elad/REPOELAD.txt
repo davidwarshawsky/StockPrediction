@@ -1,0 +1,5 @@
+I git cloned the repo.
+You helped me get admin privelages for my computer.
+I used notepad to make this text file.
+I git committed this to the repo.
+
