@@ -59,7 +59,6 @@ class Data():
             self.stocks = dictionary
         if output  == True:
             return self.stocks
-     def stock_data_loaded(self,s  ):
 
     def valid_symbol(self):
         if (self.start == None or self.stop == None):
