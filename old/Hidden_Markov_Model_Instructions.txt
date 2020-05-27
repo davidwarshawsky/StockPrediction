@@ -1,0 +1,5 @@
+pip install seqlearn
+in dell searchbar, bottom left
+search hmm or hmm.py
+select the file 
+change scipy.misc to scipy.special in the imports and save the file 
