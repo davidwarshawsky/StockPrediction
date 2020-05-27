@@ -3,10 +3,11 @@ from datetime import timedelta, time,date,datetime
 import numpy as np
 import os
 import pandas as pd
+from sklearn.model_selection import train_test_split
 import sys
 import time
 import yfinance as yf
-sys.path.append('./data/')
+sys.path.append('./david/data/')
 sys.path.append('.\\data\\stock_data\\day')
 from dictionary import *
 
@@ -22,10 +23,12 @@ class Stock():
     stop  = None
     filepath = ".\\data\\stock_data\\day\\{}.csv"
     valid_name = True
+    days = None
     X_train,X_test,y_train,y_test = None,None,None,None
 
-    def __init__(self,symbol:str):
+    def __init__(self,symbol:str,days=14):
         self.symbol = symbol
+        self.days = days
         self.filepath = self.filepath.format(self.symbol)
         #self.validate_stock()
 
@@ -86,14 +89,14 @@ class Stock():
             data.drop('Date',axis=1,inplace=True)
         return data
 
-    def getXy(self,days=15):
+    def getXy(self):
         """
         Splits stock data into X and y.
         :param int days: The number of days to calculate percent change for y to predict the Adj_Close.
         :return pd.DataFrame X,y: X and y
         """
         data_copy = self.data.copy()
-        y = data_copy['Adj_Close'].pct_change(periods=days).shift(-days).replace(to_replace=np.NaN, value=0)
+        y = data_copy['Adj_Close'].pct_change(periods=self.days).shift(-self.days).replace(to_replace=np.NaN, value=0)
         print(y)
         data_copy.drop(columns=['Adj_Close', 'Close'], axis=1, inplace=True)
         X = data_copy
@@ -103,8 +106,11 @@ class Stock():
         print(y.tail(20))
         return X,y
 
-
-
+    def train_test_split(self):
+        X,y = self.getXy()
+        X_train,X_test = train_test_split(X[:-self.days],test_size=0.5,shuffle=False)
+        y_train,y_test = train_test_split(y,test_size=0.5,shuffle=False)
+        return X_train,X_test,y_train,y_test
 
     def update_data(self) -> bool:
         """
@@ -139,7 +145,12 @@ def main():
     aapl = Stock("AAPL")
     aapl.get_stock_data()
     aapl.update_data()
-    X,y = aapl.getXy(days=14)
+    X_train,X_test,y_train,y_test = aapl.train_test_split()
+    print(X_train.shape)
+    print(X_test.shape)
+    print(y_train.shape)
+    print(y_test.shape)
+
     # stocks:dict = csv_to_dict(open("./data/stocks.csv"))
     # for key in stocks.keys():
     #     print(key)
