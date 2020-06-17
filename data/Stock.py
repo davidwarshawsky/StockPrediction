@@ -6,8 +6,8 @@ import pandas as pd
 import sys
 import time
 import yfinance as yf
-sys.path.append('../data/stock_data/day/')
-from dictionary import *
+sys.path.append('data/stock_data/day/')
+from data.dictionary import *
 
 
 class Stock():
@@ -17,12 +17,27 @@ class Stock():
     symbol: str           = None
     data:  pd.DataFrame   = None
     start = None
-    filepath = "../data/stock_data/day/{}.csv"
+    filepath = "data/stock_data/day/{}.csv"
 
     def __init__(self,symbol:str,start:str='2010-01-01'):
-        self.symbol = symbol
-        self.filepath = self.filepath.format(self.symbol)
+        self._set_symbol(symbol)
+        self._set_filepath()
         self.start = datetime.strptime(start,'%Y-%m-%d')
+        self._get_stock_data()
+        self._update_data()
+
+    def switch_stock(self,symbol):
+        self._set_symbol(symbol)
+        self._set_filepath()
+        self._get_stock_data()
+        self._update_data()
+
+    def _set_symbol(self,symbol):
+        self.symbol = symbol
+
+    def _set_filepath(self):
+        filepath = "data/stock_data/day/{}.csv"
+        self.filepath = filepath.format(self.symbol)
 
     def get_data(self):
         return self.data
@@ -52,22 +67,22 @@ class Stock():
     def _set_stop(self):
         self.stop = datetime.date(self.data.index[-1])
 
-    def get_stock_data(self):
+    def _get_stock_data(self):
         #check if data is already available
         if os.path.isfile(self.filepath):
             self.data = pd.read_csv(self.filepath,index_col='Date',parse_dates=True)
-            self.set_start()
-            self.set_stop()
+            self._set_start()
+            self._set_stop()
             return
         else:
             # Load & Select Data
             self.data = yf.download(self.symbol,start=self.start,rounding=True)
             # Save the data for later use
             self.data.to_csv(self.filepath,index=True)
-            self.set_start()
-            self.set_stop()
+            self._set_start()
+            self._set_stop()
 
-    def update_data(self) -> bool:
+    def  _update_data(self) -> bool:
         """
         Updates stock data to the current date.
         :return bool: Whether the data got updated.
@@ -84,5 +99,15 @@ class Stock():
             new_data.to_csv(self.filepath, mode="a", index=True,header=False)
             # Save the data in self.data
             self.data = pd.concat([self.data,new_data]).drop_duplicates()
-            self.set_stop()
+            self._set_stop()
             return True
+
+
+def main():
+    stock = Stock("AAPL")
+    print(stock.get_data().head())
+    stock.switch_stock("MSFT")
+    print(stock.get_data().head())
+
+if __name__ == '__main__':
+    main()

@@ -1,14 +1,23 @@
+from abc import ABC, abstractmethod
 
-class BasicModel(object):
 
+class BasicModel(ABC):
+    @abstractmethod
     def __init__(self):
         pass
 
+    @abstractmethod
     def fit(self):
         pass
 
+    @abstractmethod
     def predict(self):
         pass
 
+    @abstractmethod
     def plot_loss(self):
+        pass
+
+    @abstractmethod
+    def build_mode(self):
         pass

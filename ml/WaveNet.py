@@ -8,6 +8,7 @@ import tensorflow as tf
 from keras.models import Model
 from keras.layers import Input, Conv1D, Dense, Activation, Dropout, Lambda, Multiply, Add, Concatenate,Conv2D
 from keras.optimizers import Adam
+from data.Stock import Stock
 
 
 # https://machinelearningmastery.com/multivariate-time-series-forecasting-lstms-keras/
@@ -16,6 +17,7 @@ from keras.optimizers import Adam
 
 class WaveNet(BasicModel):
     def __init__(self, stock, days=10, n_filters=20, filter_width=5, batch_size=2048, epochs=100):
+        super()
         self.stock = stock
         self.days = days
         self.stock.get_stock_data()

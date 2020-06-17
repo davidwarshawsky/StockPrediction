@@ -1,7 +1,11 @@
 import yfinance as yf
+import pandas as pd
 import os
 import sys
-sys.path.append('..data/stock_data/recommendations/')
+
+sys.path.append('data/stock_data/recommendations/')
+
+
 def get_options_dates(symbol):
     """
     Gets the dates available for options for a stock.
@@ -11,7 +15,8 @@ def get_options_dates(symbol):
     ticker = yf.Ticker(symbol)
     return list(ticker.options)
 
-def get_option_chains(symbol,date):
+
+def get_option_chains(symbol, date):
     """
     Gets option chains for a stock.
     :param symbol: The symbol of the stock.
@@ -42,6 +47,7 @@ def get_calls(chains):
         calls.append(chain.calls)
     return calls
 
+
 def get_puts(chains):
     """
     Gets puts fromp option chains.
@@ -54,19 +60,36 @@ def get_puts(chains):
     return puts
 
 
-def get_recs(ticker):
+def process_options(df, dates):
+    df = pd.concat(df, keys=dict(zip(dates, df)))
+    df['inTheMoney'] = df['inTheMoney'].replace({False: 0, True: 1})
+    df = df.drop(columns=['contractSymbol', 'contractSize', 'currency'])
+    print(df.dtypes)
+    return df
+
+
+def get_rec(symbol, printit=False):
+    ticker = yf.Ticker(symbol)
     df = ticker.recommendations
-    firms       = df['Firm'].unique()
-    to_grades   = df['To Grade'].unique()
-    from_grades = df['From Grade'].unique()
-    actions     = df['Action'].unique()
-    space = "\n\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ "
-    for array in [firms,to_grades,from_grades,actions]:
-        print(str(array) + space)
+    if printit:
+        firms = df['Firm'].unique()
+        to_grades = df['To Grade'].unique()
+        from_grades = df['From Grade'].unique()
+        actions = df['Action'].unique()
+        space = "\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n"
+        for array in [firms, to_grades, from_grades, actions]:
+            print(str(array) + space)
+    return df
 
-# get_recs(yf.Ticker("AAPL"))
-print(os.getcwd())
-print(os.listdir())
 
-if os.
-firms = open('stock_data/recommendations/')
+def main():
+    dates = get_options_dates("AAPL")
+    chains = get_option_chains("AAPL", dates)
+    calls = get_calls(chains)
+    puts = get_puts(chains)
+    df_puts = process_options(puts, dates)
+    print(df_puts.head())
+
+
+if __name__ == '__main__':
+    main()
