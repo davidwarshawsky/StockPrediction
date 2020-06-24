@@ -19,5 +19,12 @@ class BasicModel(ABC):
         pass
 
     @abstractmethod
-    def build_mode(self):
+    def build_model(self):
+        pass
+
+    @abstractmethod
+    def save(self):
+        pass
+    @abstractmethod
+    def load_model(self):
         pass

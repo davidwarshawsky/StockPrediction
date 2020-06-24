@@ -5,10 +5,15 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import tensorflow as tf
-from keras.models import Model
+from keras.models import Model, model_from_json
 from keras.layers import Input, Conv1D, Dense, Activation, Dropout, Lambda, Multiply, Add, Concatenate,Conv2D
 from keras.optimizers import Adam
 from data.Stock import Stock
+from datetime import date
+import os
+import sys
+sys.path.append('ml/models/')
+from emailer import send_email
 
 
 # https://machinelearningmastery.com/multivariate-time-series-forecasting-lstms-keras/
@@ -20,8 +25,6 @@ class WaveNet(BasicModel):
         super()
         self.stock = stock
         self.days = days
-        self.stock.get_stock_data()
-        self.stock.update_data()
         df = self.stock.get_data()
         df = df.drop(columns=['Volume'])
         # To scale data
@@ -113,14 +116,10 @@ class WaveNet(BasicModel):
 
     def fit(self):
         # Implement EarlyStopping and Keras Tuner later.
-        config = tf.compat.v1.ConfigProto()
-        config.gpu_options.allow_growth = True
-        with tf.device('/gpu:0'):
-            self.history = self.model.fit(self.X_train, self.y_train,
-                                          batch_size=self.batch_size,
-                                          epochs=self.epochs,
-                                          validation_data=(self.X_test, self.y_test),
-                                          shuffle=False)
+        # config = tf.compat.v1.ConfigProto()
+        # config.gpu_options.allow_growth = True
+        # with tf.device('/gpu:0'):
+        self.history = self.model.fit(self.X_train, self.y_train,batch_size=self.batch_size,epochs=self.epochs,validation_data=(self.X_test, self.y_test),shuffle=False)
 
     def plot_loss(self):
         plt.plot(np.exp(self.history.history['loss']))
@@ -129,7 +128,7 @@ class WaveNet(BasicModel):
         plt.xlabel('Epoch')
         plt.ylabel('Mean Absolute Error Loss')
         plt.title('Loss Over Time')
-        plt.legend(['Train', 'Validation']);
+        plt.legend(['Train', 'Validation'])
 
     def predict(self):
         self.preds = self.model.predict(self.features_for_future.reshape(
@@ -140,7 +139,44 @@ class WaveNet(BasicModel):
         return self.preds
 
 
+    def save(self):
+        model_json = self.model.to_json()
+        model_name = "wn&{}&{}&{}&{}&{}&{}".format(self.stock.symbol, self.days, self.n_filters, self.filter_width,
+                                                   self.batch_size, self.epochs)
+        with open("ml/models/" + model_name + ".json", "w") as json_file:
+            json_file.write(model_json)
+        # serialize weights to HDF5
+        self.model.save_weights("ml/models/" + model_name + ".h5")
+
+    def load_model(self):
+        keys = ['symbol','days','n_filters','filter_width','batch_size','epochs']
+        values = []
+        for key in keys:
+            values.append(str(input("Please enter desired {}: ".format(key))))
+        model_name = "wn&%s&%s&%s&%s&%s&%s" % tuple(values)
+        print(model_name)
+        # stock, days=10, n_filters=20, filter_width=5, batch_size=2048, epochs=100
+        json_file = open("ml/models/" + model_name +'.json', 'r')
+        loaded_model_json = json_file.read()
+        json_file.close()
+        self.model = model_from_json(loaded_model_json)
+        # load weights into new model
+        self.model.load_weights("ml/models/" + model_name + ".h5")
+        self.model.compile(Adam(), loss='mean_absolute_error')
+        print("Loaded model from disk")
+
 
     def get_last_days(self):
         return self.dates[-self.days:]
 
+def main():
+    # ??? https://machinelearningmastery.com/save-load-keras-deep-learning-models/
+    wn = WaveNet(Stock("MSFT"),epochs=1)
+    wn.load_model()
+    pred = str(wn.predict()[-1][0][0])
+    day = str(wn.get_last_days()[-1])
+    message = "Microsoft 10 day percent change from " + day + ": " + pred
+    send_email("davidawarshawsky@gmail.com", "Come on hear me out", message)
+
+if __name__ == '__main__':
+    main()

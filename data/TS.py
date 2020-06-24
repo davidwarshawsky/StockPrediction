@@ -1,5 +1,5 @@
 # File that defines functions for time series.
-
+import pandas as pd
 def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
 	"""
 	Frame a time series as a supervised learning dataset.
