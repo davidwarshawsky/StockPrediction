@@ -1,5 +1,5 @@
 from ml.BasicModel import BasicModel
-from data.TS import series_to_supervised
+from data.TS import series_to_supervised,get_last_days
 from data.Stock import Stock
 import numpy as np
 import pandas as pd
@@ -13,7 +13,7 @@ from datetime import date
 import os
 import sys
 sys.path.append('ml/models/')
-from emailer import send_email
+from emailer import create_email,send_email
 
 
 # https://machinelearningmastery.com/multivariate-time-series-forecasting-lstms-keras/
@@ -35,6 +35,8 @@ class WaveNet(BasicModel):
         self.batch_size = batch_size
         self.epochs = epochs
 
+        # THIS STUFF BELOW I ADDED INTO A FUNCTION BUT I NEED TO MAKE IT REUSABLE FOR FUTURE USE
+        # The Model SHOULD NOT DEAL with DATA PREPROCESSING
         data_size = df.shape[0]
         copy = series_to_supervised(df.values, self.days, 1)
         copy = copy.drop(columns=['var1(t)', 'var2(t)', 'var3(t)', 'var4(t)'])
@@ -129,6 +131,7 @@ class WaveNet(BasicModel):
         plt.ylabel('Mean Absolute Error Loss')
         plt.title('Loss Over Time')
         plt.legend(['Train', 'Validation'])
+        plt.plot()
 
     def predict(self):
         self.preds = self.model.predict(self.features_for_future.reshape(
@@ -148,12 +151,15 @@ class WaveNet(BasicModel):
         # serialize weights to HDF5
         self.model.save_weights("ml/models/" + model_name + ".h5")
 
-    def load_model(self):
-        keys = ['symbol','days','n_filters','filter_width','batch_size','epochs']
-        values = []
-        for key in keys:
-            values.append(str(input("Please enter desired {}: ".format(key))))
-        model_name = "wn&%s&%s&%s&%s&%s&%s" % tuple(values)
+    def load_model(self,ask=False):
+        if ask:
+            keys = ['symbol', 'days', 'n_filters', 'filter_width', 'batch_size', 'epochs']
+            values = []
+            for key in keys:
+                values.append(str(input("Please enter desired {}: ".format(key))))
+            model_name = "wn&%s&%s&%s&%s&%s&%s" % tuple(values)
+        else:
+            model_name = "wn&MSFT&10&20&5&2048&100"
         print(model_name)
         # stock, days=10, n_filters=20, filter_width=5, batch_size=2048, epochs=100
         json_file = open("ml/models/" + model_name +'.json', 'r')
@@ -171,12 +177,13 @@ class WaveNet(BasicModel):
 
 def main():
     # ??? https://machinelearningmastery.com/save-load-keras-deep-learning-models/
-    wn = WaveNet(Stock("MSFT"),epochs=1)
+    wn = WaveNet(Stock("MSFT"))
     wn.load_model()
     pred = str(wn.predict()[-1][0][0])
-    day = str(wn.get_last_days()[-1])
+    day = str(get_last_days(wn.dates,10)[-1])
     message = "Microsoft 10 day percent change from " + day + ": " + pred
-    send_email("davidawarshawsky@gmail.com", "Come on hear me out", message)
+    email = create_email("AppliedMarkets Predictions MSFT!",message)
+    send_email(email)
 
 if __name__ == '__main__':
     main()

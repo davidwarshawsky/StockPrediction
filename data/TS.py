@@ -32,6 +32,7 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
 	if dropnan:
 		agg.dropna(inplace=True)
 	return agg
+<<<<<<< HEAD
 
 
 def get_last_days(index,days):
@@ -58,3 +59,19 @@ def time_series_split(df:pd.DataFrame,days):
 	y_train = y_train.reshape(y_train.shape[0], 1, 1)
 	y_test = y_test.reshape(y_test.shape[0], 1, 1)
 	return X_train,y_train,X_test,y_test,features_for_future
+=======
+def shifts(df, window):
+    for col in df.columns.tolist():
+        for i in range(1, window - 1):
+            df[col + '_' + str(i)] = df[col].shift(-1 * i)
+    replace_bad(df)
+    return df
+
+def holdout_confidence(real,pred,sample_weight = 0 ):
+	"""provides accuracy dependant on the trend changes in a holdout set:
+	   where class 1 is positive trend
+	   and class 0 is negative trend"""
+    pred = np.where(pred > 0 ,1,0)
+    real = np.where(real > 0 ,1,0)
+    return accuracy_score(real,pred)
+>>>>>>> 3e6fd2a2499dee6bf2edd1b5c34231f77a08cb07
