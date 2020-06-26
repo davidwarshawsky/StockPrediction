@@ -17,20 +17,21 @@ class Stock():
     symbol: str           = None
     data:  pd.DataFrame   = None
     start = None
-    filepath = "data/stock_data/day/{}.csv"
-
     def __init__(self,symbol:str,start:str='2010-01-01'):
-        self._set_symbol(symbol)
-        self._set_filepath()
-        self.start = datetime.strptime(start,'%Y-%m-%d')
-        self._get_stock_data()
+        self.switch_start(start)
+        self.switch_stock(symbol)
+        print(self.data.index[0],type(self.data.index[0]))
         self._update_data()
+        print(self.get_data().columns)
 
     def switch_stock(self,symbol):
         self._set_symbol(symbol)
         self._set_filepath()
         self._get_stock_data()
         self._update_data()
+
+    def switch_start(self,start:str='2010-01-01'):
+        self.start = datetime.strptime(start, '%Y-%m-%d')
 
     def _set_symbol(self,symbol):
         self.symbol = symbol
@@ -71,6 +72,7 @@ class Stock():
         #check if data is already available
         if os.path.isfile(self.filepath):
             self.data = pd.read_csv(self.filepath,index_col='Date',parse_dates=True)
+            self.data = self.data.loc[self.start:]
             self._set_start()
             self._set_stop()
             return
@@ -105,9 +107,9 @@ class Stock():
 
 def main():
     stock = Stock("AAPL")
-    print(stock.get_data().head())
-    stock.switch_stock("MSFT")
-    print(stock.get_data().head())
+    target = stock.get_data()['Adj_Close']
+    target = pd.Series(target).pct_change(10).shift(-10).fillna(0).values
+    print(target[-20:])
 
 if __name__ == '__main__':
     main()

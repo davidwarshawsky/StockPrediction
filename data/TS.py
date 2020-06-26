@@ -32,3 +32,29 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
 	if dropnan:
 		agg.dropna(inplace=True)
 	return agg
+
+
+def get_last_days(index,days):
+	return index[-days:]
+
+def time_series_split(df:pd.DataFrame,days):
+	data_size = df.shape[0]
+	copy = series_to_supervised(df.values, days, 1)
+	copy = copy.drop(columns=['var1(t)', 'var2(t)', 'var3(t)', 'var4(t)'])
+	values = copy.values
+
+	values[:, -1] = pd.Series(values[:, -1].flatten()).pct_change(days).shift(-days).fillna(0).values
+	train_size = int(values.shape[0] * 0.8)
+	train = values[:train_size, :]
+	test = values[train_size:, :]
+	features_for_future = test[-days:, :-1]
+	test = test[:-days]
+	# split into input and outputs
+	X_train, y_train = train[:, :-1], train[:, -1]
+	X_test, y_test = test[:, :-1], test[:, -1]
+	# reshape input to be 3D [samples, timesteps, features]
+	X_train = X_train.reshape((X_train.shape[0], 1, X_train.shape[1]))
+	X_test = X_test.reshape((X_test.shape[0], 1, X_test.shape[1]))
+	y_train = y_train.reshape(y_train.shape[0], 1, 1)
+	y_test = y_test.reshape(y_test.shape[0], 1, 1)
+	return X_train,y_train,X_test,y_test,features_for_future
