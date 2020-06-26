@@ -8,7 +8,7 @@ import time
 import yfinance as yf
 sys.path.append('data/stock_data/day/')
 from data.dictionary import *
-
+from sklearn.model_selection import train_test_split
 
 class Stock():
     """
@@ -41,6 +41,30 @@ class Stock():
 
     def get_data(self):
         return self.data
+
+    def get_splits(self,window = 5,test_size = 0.2,target = 'pct',value = 0):
+        if (target not in ['pct','diff','shift']):
+            raise ValueError('{} is not an acceptable target, use ["pct","diff","shift"]'.format(target))
+        elif not (window.is_integer()):
+            raise ValueError('Window must be an integer')
+        elif not (test_size.is_float()):
+            raise ValueError('test_size should be a float in range (0,1)')
+
+        elif (target in ['pct','diff','shift']) & (window.is_integer()) & (test_size.is_float()):
+            columns = self.data.columns.tolist()
+            columns.remove('Adj Close')
+            if target == 'pct':
+                self.y = self.data['Adj Close'].pct_change(window).shift(-window,fill_value = value)
+            elif target == 'diff':
+                self.y = self.data['Adj Close'].diff(window).shift(-window,fill_value = value)
+            elif target == 'shift':
+                self.y = self.data['Adj Close'].shift(-window,fill_value = value)
+
+            self.X = self.data[columns].loc[:int(self.data.shape[0]-window),:]
+            self.y = self.y[:int(self.data.shape[0]-window)]
+
+            self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X,self.y,test_size = test_size)
+            return self.X_train, self.X_test, self.y_train, self.y_test
 
     def _to_dict(self):
         dictionary = dict()
