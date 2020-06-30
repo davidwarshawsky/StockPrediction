@@ -20,9 +20,6 @@ class Stock():
     def __init__(self,symbol:str,start:str='2010-01-01'):
         self.switch_start(start)
         self.switch_stock(symbol)
-        print(self.data.index[0],type(self.data.index[0]))
-        self._update_data()
-        print(self.get_data().columns)
 
     def switch_stock(self,symbol):
         self._set_symbol(symbol)
@@ -46,26 +43,28 @@ class Stock():
     def get_splits(self,window = 5,test_size = 0.2,target = 'pct',value = 0):
         if (target not in ['pct','diff','shift']):
             raise ValueError('{} is not an acceptable target, use ["pct","diff","shift"]'.format(target))
-        elif not (window.is_integer()):
+        elif not (type(window) == int):
             raise ValueError('Window must be an integer')
-        elif not (test_size.is_float()):
+        elif not (type(test_size) == float):
             raise ValueError('test_size should be a float in range (0,1)')
 
-        elif (target in ['pct','diff','shift']) & (window.is_integer()) & (test_size.is_float()):
+        elif (target in ['pct','diff','shift']) & (type(window) == int) & (type(test_size) == float):
             columns = self.data.columns.tolist()
-            columns.remove('Adj Close')
+            columns.remove('Adj_Close')
+            print(columns)
             if target == 'pct':
-                self.y = self.data['Adj Close'].pct_change(window).shift(-window,fill_value = value)
+                y = self.data['Adj_Close'].pct_change(window).shift(-window,fill_value = value)
             elif target == 'diff':
-                self.y = self.data['Adj Close'].diff(window).shift(-window,fill_value = value)
+                y = self.data['Adj_Close'].diff(window).shift(-window,fill_value = value)
             elif target == 'shift':
-                self.y = self.data['Adj Close'].shift(-window,fill_value = value)
+                y = self.data['Adj_Close'].shift(-window,fill_value = value)
 
-            self.X = self.data[columns].loc[:int(self.data.shape[0]-window),:]
-            self.y = self.y[:int(self.data.shape[0]-window)]
+            X = self.data[columns]
+            X = X.iloc[:int(self.data.shape[0]-window),:]
+            y = y[:int(self.data.shape[0]-window)]
 
-            self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X,self.y,test_size = test_size)
-            return self.X_train, self.X_test, self.y_train, self.y_test
+            X_train, X_test, y_train, y_test = train_test_split(X,y,test_size = test_size)
+            return X_train, X_test, y_train, y_test
 
     def _to_dict(self):
         dictionary = dict()

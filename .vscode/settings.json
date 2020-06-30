@@ -1,0 +1,5 @@
+{
+    "python.pythonPath": "C:\\Users\\dwarshawsky\\miniconda3\\envs\\StockPrediction\\python.exe",
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true
+}
