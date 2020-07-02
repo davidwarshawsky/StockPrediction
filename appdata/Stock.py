@@ -6,8 +6,10 @@ import pandas as pd
 import sys
 import time
 import yfinance as yf
-sys.path.append('data/stock_data/day/')
-from data.dictionary import *
+start = "C:\\Projects\\StockPrediction\\"
+sys.path.append(start)
+sys.path.append(start + 'appdata/stock_data/day/')
+from appdata.dictionary import *
 from sklearn.model_selection import train_test_split
 
 class Stock():
@@ -17,9 +19,10 @@ class Stock():
     symbol: str           = None
     data:  pd.DataFrame   = None
     start = None
-    def __init__(self,symbol:str,start:str='2010-01-01'):
+    def __init__(self,symbol:str=None,start:str='2010-01-01'):
         self.switch_start(start)
-        self.switch_stock(symbol)
+        if symbol is not None:
+            self.switch_stock(symbol)
 
     def switch_stock(self,symbol):
         self._set_symbol(symbol)
@@ -34,7 +37,7 @@ class Stock():
         self.symbol = symbol
 
     def _set_filepath(self):
-        filepath = "data/stock_data/day/{}.csv"
+        filepath = "appdata/stock_data/day/{}.csv"
         self.filepath = filepath.format(self.symbol)
 
     def get_data(self):

@@ -3,8 +3,8 @@ import pandas as pd
 import os
 import sys
 import numpy as np
-from data.TS import series_to_supervised
-sys.path.append('data/stock_data/recommendations/')
+from appdata.TS import series_to_supervised
+sys.path.append('appdata/stock_data/recommendations/')
 
 
 # https://github.com/mcdallas/wallstreet
@@ -67,8 +67,8 @@ class Options():
 
     def _set_filepath(self):
         # Format the filepath
-        puts_filepath = "data/stock_data/options/p{}.csv"
-        calls_filepath = "data/stock_data/options/c{}.csv"
+        puts_filepath = "appdata/stock_data/options/p{}.csv"
+        calls_filepath = "appdata/stock_data/options/c{}.csv"
         self.puts_filepath  = puts_filepath.format(self.symbol)
         self.calls_filepath = calls_filepath.format(self.symbol)
 

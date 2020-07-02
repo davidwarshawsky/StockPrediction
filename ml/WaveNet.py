@@ -97,6 +97,7 @@ class WaveNet(BaseModel):
 
     def save(self,symbol:str):
         model_json = self.model.to_json()
+        # https://stackoverflow.com/questions/16084623/python-is-it-okay-to-pass-self-to-an-external-function
         model_name = set_model_name(self,symbol)
         with open(super().base_dir + model_name + ".json", "w") as json_file:
             json_file.write(model_json)
