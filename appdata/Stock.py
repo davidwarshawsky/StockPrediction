@@ -44,6 +44,10 @@ class Stock():
         return self.data
 
     def get_splits(self,window = 5,test_size = 0.2,target = 'pct',value = 0):
+        """"
+        window: How many days ahead you want to predict the percent change for.
+        value: What you would like  to fill nans with.
+        """
         if (target not in ['pct','diff','shift']):
             raise ValueError('{} is not an acceptable target, use ["pct","diff","shift"]'.format(target))
         elif not (type(window) == int):

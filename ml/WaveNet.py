@@ -1,6 +1,5 @@
 from ml.BasicModel import BaseModel
-from data.TS import *
-from data.Stock import Stock
+from appdata.TS import *
 from keras.models import Model
 import numpy as np
 import pandas as pd
@@ -8,7 +7,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 from keras.layers import Input, Conv1D, Dense, Activation, Dropout, Lambda, Multiply, Add, Concatenate,Conv2D
 from keras.optimizers import Adam
-from data.Stock import Stock
+from appdata.Stock import Stock
 from datetime import date
 import os
 import sys
