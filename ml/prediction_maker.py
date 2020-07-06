@@ -10,4 +10,4 @@ def read_SP500_symbols():
         print(dictionary.keys())
         print(len(dictionary.keys()))
 
-read_SP500_symbols()
+read_SP500_symbols()    
