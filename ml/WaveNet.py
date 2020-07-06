@@ -124,7 +124,6 @@ def main():
     predictions = wn.predict(future_features)
 
 
-
     message = "Microsoft 10 day percent change from " + day + ": " + pred
     email = create_email("AppliedMarkets Predictions MSFT!",message)
     send_email(email)
