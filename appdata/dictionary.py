@@ -9,6 +9,9 @@ def csv_to_dict(csv_file):
     reader = csv.reader(csv_file)
     return dict(reader)
 
+def csv_to_list(csv_file):
+    reader = csv.reader(csv_file)
+    return list(reader)[0]
 
 class JSON_Parser():
     def __init__(self, json: dict):
