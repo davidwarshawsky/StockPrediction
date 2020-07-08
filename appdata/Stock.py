@@ -29,6 +29,7 @@ class Stock():
         self._set_filepath()
         self._get_stock_data()
         self._update_data()
+        print(self.get_data().columns)
 
     def switch_start(self,start:str='2010-01-01'):
         self.start = datetime.strptime(start, '%Y-%m-%d')
@@ -44,7 +45,11 @@ class Stock():
         return self.data
 
     def get_splits(self,window = 5,test_size = 0.2,target = 'pct',value = 0):
-        if (target not in ['pct','diff','shift']):
+        """"
+        window: How many days ahead you want to predict the percent change for.
+        value: What you would like  to fill nans with.
+        """
+        if target not in ['pct','diff','shift']:
             raise ValueError('{} is not an acceptable target, use ["pct","diff","shift"]'.format(target))
         elif not (type(window) == int):
             raise ValueError('Window must be an integer')
@@ -99,43 +104,50 @@ class Stock():
         if os.path.isfile(self.filepath):
             self.data = pd.read_csv(self.filepath,index_col='Date',parse_dates=True)
             self.data = self.data.loc[self.start:]
-            self._set_start()
             self._set_stop()
-            return
+            print("Got data from csv")
+            print("The last two records of csv\n",self.data.tail(2))
         else:
             # Load & Select Data
             self.data = yf.download(self.symbol,start=self.start,rounding=True)
-            # Save the data for later use
+            # Save the data for later use and set the stop index
             self.data.to_csv(self.filepath,index=True)
-            self._set_start()
             self._set_stop()
+            print("Got data from YFINANCE")
+            print("The last two records of csv\n", self.data.tail(2))
 
     def  _update_data(self) -> bool:
         """
         Updates stock data to the current date.
         :return bool: Whether the data got updated.
         """
+        # If the date of the last index of data is today return False
         if date.today() == self.stop:
+            print("Todays date equals stopping date so didn't update data")
             return False
+        print("UPDATING")
+        # Add one day to the current stop to get a new start.
         new_start = self.stop + timedelta(days=1)
+        print("the new start date is ",new_start)
+        # Get new data based on the new start.
+        print("old data tail \n",self.data.tail(3))
         new_data = yf.download(self.symbol,start=new_start,rounding=True)
+        print("new data head \n",new_data.head(3))
+        # If there is no new data or the last index of the new data
+        # is further back than the current data then return False.
         if new_data.empty or new_data.index[-1] <= self.data.index[-1]:
+            print("There is no new data to add")
             return False
+        # If you have new valid data
         else:
-            new_data = new_data.loc[new_start:]
+            # Select the new_data from the new_start
+            # new_data = new_data.loc[new_start:]
             # Save the data for later use
             new_data.to_csv(self.filepath, mode="a", index=True,header=False)
-            # Save the data in self.data
+            # Add the new data to self.data and drop duplicates just in case.
             self.data = pd.concat([self.data,new_data]).drop_duplicates()
+            print(self.data.shape)
+            # Set the new stop and return True.
             self._set_stop()
             return True
 
-
-def main():
-    stock = Stock("AAPL")
-    target = stock.get_data()['Adj_Close']
-    target = pd.Series(target).pct_change(10).shift(-10).fillna(0).values
-    print(target[-20:])
-
-if __name__ == '__main__':
-    main()

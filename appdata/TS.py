@@ -40,22 +40,30 @@ def get_last_days(index,days):
     return index[-days:]
 
 def time_series_split(df:pd.DataFrame,days):
-    df = df.drop(columns=['Volume'])
-    # To scale data
+    # Drop volume because it overpowers everything else in the model
+    df.drop(columns=['Volume'],inplace=True)
+    # df.reset_index(drop=True,inplace=True)
+    # Scale data without min max.
     df = df.div(100)
-    self.dates = df.index
-
+    # Get the number of rows
     data_size = df.shape[0]
+    print("Data shape TSS",df.shape)
+    print(df.columns)
     copy = series_to_supervised(df.values, days, 1)
-    copy = copy.drop(columns=['var1(t)', 'var2(t)', 'var3(t)', 'var4(t)'])
+    print("Data shape TSS",df.shape)
+    print("series to supervised columns:\n",copy.columns)
+    copy.drop(columns=['var1(t)', 'var2(t)', 'var3(t)', 'var4(t)'],inplace=True,axis=1)
+    print("series to supervised columns after drop:\n",copy.columns)
+    print(copy.shape)
+    # ---
     values = copy.values
-
+    print(values.shape)
     values[:, -1] = pd.Series(values[:, -1].flatten()).pct_change(days).shift(-days).fillna(0).values
     train_size = int(values.shape[0] * 0.8)
     train = values[:train_size, :]
     test = values[train_size:, :]
-    features_for_future = test[-days:, :-1]
-    test = test[:-days]
+    future_features = test[-days:, :-1]
+    test = test[:-days,:]
     # split into input and outputs
     X_train, y_train = train[:, :-1], train[:, -1]
     X_test, y_test = test[:, :-1], test[:, -1]
@@ -64,7 +72,10 @@ def time_series_split(df:pd.DataFrame,days):
     X_test = X_test.reshape((X_test.shape[0], 1, X_test.shape[1]))
     y_train = y_train.reshape(y_train.shape[0], 1, 1)
     y_test = y_test.reshape(y_test.shape[0], 1, 1)
-    return X_train,y_train,X_test,y_test,features_for_future
+    future_features = future_features.reshape(future_features.shape[0],1,future_features.shape[1])
+    # for x in [X_train,y_train,X_test,y_test,future_features]:
+    #     print("TSS" , x.shape)
+    return X_train,y_train,X_test,y_test,future_features
 
 
 def shifts(df, window):

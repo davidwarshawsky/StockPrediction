@@ -1,6 +1,5 @@
 from ml.BasicModel import BaseModel
-from data.TS import *
-from data.Stock import Stock
+from appdata.TS import *
 from keras.models import Model
 import numpy as np
 import pandas as pd
@@ -8,7 +7,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 from keras.layers import Input, Conv1D, Dense, Activation, Dropout, Lambda, Multiply, Add, Concatenate,Conv2D
 from keras.optimizers import Adam
-from data.Stock import Stock
+from appdata.Stock import Stock
 from datetime import date
 import os
 import sys
@@ -21,7 +20,7 @@ from ml.modelFunctions import get_model_name,set_model_name
 # https://machinelearningmastery.com/how-to-develop-lstm-models-for-time-series-forecasting/
 
 class WaveNet(BaseModel):
-    def __init__(self, days=10, n_filters=20, filter_width=5, batch_size=2048, epochs=100):
+    def __init__(self, input_shape:tuple,days=10, n_filters=20, filter_width=5, batch_size=1000, epochs=100):
         super().__init__()
         self.days = days
         self.filter_width = filter_width
@@ -35,7 +34,8 @@ class WaveNet(BaseModel):
         dilation_rates = [2 ** i for i in range(7)] * 2
 
         # define an input history series and pass it through a stack of dilated causal convolution blocks
-        history_seq = Input(shape=(self.X_train.shape[1], self.X_train.shape[2]))
+        history_seq = Input(shape=input_shape)
+        # self.X_train.shape[1], self.X_train.shape[2])
         x = history_seq
 
         skips = []
@@ -92,7 +92,8 @@ class WaveNet(BaseModel):
         # config = tf.compat.v1.ConfigProto()
         # config.gpu_options.allow_growth = True
         # with tf.device('/gpu:0'):
-        return self.model.fit(X_train, y_train,batch_size=self.batch_size,epochs=self.epochs,validation_data=(X_test, y_test),shuffle=False)
+        return self.model.fit(X_train, y_train,batch_size=self.batch_size,
+                              epochs=self.epochs,validation_data=(X_test, y_test),shuffle=False)
 
 
     def save(self,symbol:str):
@@ -104,31 +105,4 @@ class WaveNet(BaseModel):
         # serialize weights to HDF5
         self.model.save_weights(super().base_dir + model_name + ".h5")
 
-        
-    def compile(self):
-        self.model.compile(Adam(), loss='mean_absolute_error')
-        print("Compiled model")
 
-
-
-def main():
-    # ??? https://machinelearningmastery.com/save-load-keras-deep-learning-models/
-    aapl_stock = Stock("AAPL")
-    X_train,y_train,X_test,y_test,future_features = time_series_split(aapl_stock.get_data())
-
-    wn = WaveNet(epochs=100)
-    model_name = get_model_name()
-    wn.load_model(model_name,model_type='keras',load_weights=True)
-    wn.compile()
-    history = wn.fit(X_train,y_train,X_test,y_test)
-    wn.plot_loss(history)
-    predictions = wn.predict(future_features)
-
-
-
-    message = "Microsoft 10 day percent change from " + day + ": " + pred
-    email = create_email("AppliedMarkets Predictions MSFT!",message)
-    send_email(email)
-
-if __name__ == '__main__':
-    main()
