@@ -1,6 +1,6 @@
 import unittest
-from data import Stock,Options
-from data.dictionary import *
+from appdata import Stock,Options
+from appdata.dictionary import *
 import pandas as pd
 
 class MyTestCase(unittest.TestCase):
