@@ -6,9 +6,7 @@ import pandas as pd
 import sys
 import time
 import yfinance as yf
-start = "C:\\Projects\\StockPrediction\\"
-sys.path.append(start)
-sys.path.append(start + 'appdata/stock_data/day/')
+sys.path.append('./appdata/stock_data/day/')
 from appdata.dictionary import *
 from sklearn.model_selection import train_test_split
 
@@ -29,7 +27,6 @@ class Stock():
         self._set_filepath()
         self._get_stock_data()
         self._update_data()
-        print(self.get_data().columns)
 
     def switch_start(self,start:str='2010-01-01'):
         self.start = datetime.strptime(start, '%Y-%m-%d')
@@ -38,7 +35,7 @@ class Stock():
         self.symbol = symbol
 
     def _set_filepath(self):
-        filepath = "appdata/stock_data/day/{}.csv"
+        filepath = "appdata\\stock_data\\day\\{}.csv"
         self.filepath = filepath.format(self.symbol)
 
     def get_data(self):
@@ -59,7 +56,6 @@ class Stock():
         elif (target in ['pct','diff','shift']) & (type(window) == int) & (type(test_size) == float):
             columns = self.data.columns.tolist()
             columns.remove('Adj_Close')
-            print(columns)
             if target == 'pct':
                 y = self.data['Adj_Close'].pct_change(window).shift(-window,fill_value = value)
             elif target == 'diff':
@@ -74,24 +70,6 @@ class Stock():
             X_train, X_test, y_train, y_test = train_test_split(X,y,test_size = test_size)
             return X_train, X_test, y_train, y_test
 
-    def _to_dict(self):
-        dictionary = dict()
-        dictionary['symbol'] = self.symbol
-        dictionary['start']  = self.start
-        dictionary['stop']   = self.stop
-        dictionary['filepath'] = self.filepath
-        return dictionary
-        # add code to send it to a csv
-
-    def _validate_stock(self) -> bool:
-        if type(self.symbol) != str:
-            raise ValueError("self.symbol is not a str")
-        if type(self.data) != pd.DataFrame and self.data != None:
-            raise ValueError("self.data is not a pd.DataFrame")
-        if self.start is not None and self.stop is not None:
-            if self.start > self.stop:
-                raise AssertionError("Your start is a newer date then your stopping date")
-        return True
 
     def _set_start(self):
         self.start = datetime.date(self.data.index[0])
@@ -102,19 +80,18 @@ class Stock():
     def _get_stock_data(self):
         #check if data is already available
         if os.path.isfile(self.filepath):
+            print(self.filepath)
             self.data = pd.read_csv(self.filepath,index_col='Date',parse_dates=True)
             self.data = self.data.loc[self.start:]
             self._set_stop()
             print("Got data from csv")
-            print("The last two records of csv\n",self.data.tail(2))
         else:
             # Load & Select Data
             self.data = yf.download(self.symbol,start=self.start,rounding=True)
+            self.data = self.data.rename(columns={'Adj Close':'Adj_Close'})
             # Save the data for later use and set the stop index
             self.data.to_csv(self.filepath,index=True)
             self._set_stop()
-            print("Got data from YFINANCE")
-            print("The last two records of csv\n", self.data.tail(2))
 
     def  _update_data(self) -> bool:
         """
@@ -128,11 +105,8 @@ class Stock():
         print("UPDATING")
         # Add one day to the current stop to get a new start.
         new_start = self.stop + timedelta(days=1)
-        print("the new start date is ",new_start)
         # Get new data based on the new start.
-        print("old data tail \n",self.data.tail(3))
         new_data = yf.download(self.symbol,start=new_start,rounding=True)
-        print("new data head \n",new_data.head(3))
         # If there is no new data or the last index of the new data
         # is further back than the current data then return False.
         if new_data.empty or new_data.index[-1] <= self.data.index[-1]:
@@ -140,6 +114,7 @@ class Stock():
             return False
         # If you have new valid data
         else:
+            new_data = new_data.rename(columns={'Adj Close': 'Adj_Close'})
             # Select the new_data from the new_start
             # new_data = new_data.loc[new_start:]
             # Save the data for later use
@@ -151,3 +126,6 @@ class Stock():
             self._set_stop()
             return True
 
+if __name__ == '__main__':
+    stockHandler = Stock()
+    stockHandler.switch_stock("GOOG")
