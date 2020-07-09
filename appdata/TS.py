@@ -47,17 +47,10 @@ def time_series_split(df:pd.DataFrame,days):
     df = df.div(100)
     # Get the number of rows
     data_size = df.shape[0]
-    print("Data shape TSS",df.shape)
-    print(df.columns)
-    copy = series_to_supervised(df.values, days, 1)
-    print("Data shape TSS",df.shape)
-    print("series to supervised columns:\n",copy.columns)
-    copy.drop(columns=['var1(t)', 'var2(t)', 'var3(t)', 'var4(t)'],inplace=True,axis=1)
-    print("series to supervised columns after drop:\n",copy.columns)
-    print(copy.shape)
+    copy = series_to_supervised(df.values, days, 1 )
+    copy.drop(columns=['var1(t)', 'var2(t)', 'var3(t)', 'var4(t)','var5(t)'],inplace=True,axis=1)
     # ---
     values = copy.values
-    print(values.shape)
     values[:, -1] = pd.Series(values[:, -1].flatten()).pct_change(days).shift(-days).fillna(0).values
     train_size = int(values.shape[0] * 0.8)
     train = values[:train_size, :]
@@ -73,10 +66,7 @@ def time_series_split(df:pd.DataFrame,days):
     y_train = y_train.reshape(y_train.shape[0], 1, 1)
     y_test = y_test.reshape(y_test.shape[0], 1, 1)
     future_features = future_features.reshape(future_features.shape[0],1,future_features.shape[1])
-    # for x in [X_train,y_train,X_test,y_test,future_features]:
-    #     print("TSS" , x.shape)
     return X_train,y_train,X_test,y_test,future_features
-
 
 def shifts(df, window):
     for col in df.columns.tolist():
