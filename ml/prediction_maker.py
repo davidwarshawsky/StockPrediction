@@ -19,7 +19,6 @@ def read_invalid_symbols():
 
 def split_data(stock:Stock):
     df = stock.get_data()
-    print("split data" , df.shape)
     return time_series_split(df,10)
 
 def make_predictions(stock:Stock):
@@ -32,8 +31,6 @@ def make_predictions(stock:Stock):
 def make_one_pred(symbol):
     stockHandler = Stock(symbol)
     X_train, y_train, X_test, y_test, future_features = split_data(stockHandler)
-    for x in [X_train,y_train,X_test,y_test,future_features]:
-        print("make one pred" , x.shape)
     wn = WaveNet(input_shape=(X_train.shape[1], X_train.shape[2]), epochs=1)
     wn.fit(X_train, y_train, X_test, y_test)
     return wn.predict(future_features)
@@ -42,10 +39,10 @@ def make_SP500_preds():
     symbols = read_SP500_symbols()
     df = pd.DataFrame()
     stockHandler = Stock()
-    for symbol in ['LNT']:
+    for symbol in symbols:
         stockHandler.switch_stock(symbol)
         predictions = make_predictions(stockHandler)
-        df[symbol] = [x[0][0] for x in predictions]
+        df[symbol] = [round(x[0][0],3) for x in predictions]
     save_predictions(df)
 
 def save_predictions(df:pd.DataFrame):
@@ -56,7 +53,10 @@ def save_predictions(df:pd.DataFrame):
 
 def main():
     # X_train, y_train, X_test, y_test, future_features = split_data(Stock("AAPL"))
-    print(make_one_pred("HPE"))
+    # Updated
+    make_SP500_preds()
+
+
 
 
 if __name__ == '__main__':
