@@ -1,7 +1,7 @@
-from ml.BasicModel import BasicModel
-from data.Stock import Stock
-from data.Options import Options
-from data.TS import series_to_supervised
+from ml.BaseModel import BaseModel
+from appdata.Stock import Stock
+from appdata.Options import Options
+from appdata.TS import series_to_supervised
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,7 +11,7 @@ from keras.models import Model
 from keras.layers import LSTM,Dense,Dropout,Input
 
 
-class LSTMOptions(BasicModel):
+class LSTM(BaseModel):
     def __init__(self,optionHandler:Options,stock:Stock,days=10):
         self.optionHandler = optionHandler
         self.stock = stock
