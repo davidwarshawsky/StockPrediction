@@ -11,7 +11,7 @@ from sklearn.model_selection import train_test_split
 from gplearn.genetic import SymbolicTransformer,SymbolicRegressor
 from lightgbm import LGBMRegressor
 from sklearn.metrics import mean_absolute_error,accuracy_score
-from ml.BasicModel import BaseModel
+from ml.BaseModel import BaseModel
 
 class SymbolicRegressor(BaseModel):
 

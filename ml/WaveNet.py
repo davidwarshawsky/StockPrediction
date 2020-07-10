@@ -1,4 +1,4 @@
-from ml.BasicModel import BaseModel
+from ml.BaseModel import BaseModel
 from appdata.TS import *
 from keras.models import Model
 import numpy as np
