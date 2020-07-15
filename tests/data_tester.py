@@ -1,7 +1,7 @@
 import unittest
-from appdata import Stock,Options
-from appdata.dictionary import *
-import pandas as pd
+from src.data import Stock, Options
+from src.data.dictionary import *
+
 
 class MyTestCase(unittest.TestCase):
     def test_stock_shape(self):

@@ -1,10 +1,9 @@
 import unittest
 import sys
 sys.path.append('appdata/stock_data/predictions/')
-from ml.WaveNet import WaveNet
-from ml.prediction_maker import *
-from ml.prediction_tester import *
-from datetime import date,timedelta
+from src.models.prediction_maker import *
+from src.models.prediction_tester import *
+from datetime import timedelta
 
 class MyTestCase(unittest.TestCase):
     # def test_wavenet(self):
