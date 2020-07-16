@@ -27,27 +27,38 @@ def get_option_expirations(symbol):
     strikes_list = [x['strikes']['strike'] for x in expirations_dict]
     return dates_list, strikes_list
 
-
 def get_strikes(symbol:str, date:str) -> list:
     response = requests.get('https://sandbox.tradier.com/v1/markets/options/strikes',
-                            params={'symbol': symbol, 'expiration': date},
+                            params={'smbol': symbol, 'expiration': date},
                             headers={'Authorization': api_keys[0], 'Accept': 'application/json'}
                             )
-    print(response.status_code)
     if response.status_code != 200:
         raise HTTPError("Expected status code: 200 Actual status code: <{}> with reason <{}>".format(
             response.status_code, response.reason))
     strikes_dict = response.json()
-    print(strikes_dict)
     if strikes_dict['strikes'] is None:
         message = "Check symbol and date, got symbol: <{}> and date <{}>".format(symbol, date)
         raise ValueError(message)
     strikes_list = strikes_dict['strikes']['strike']
     return strikes_list
 
-
+def get_option_chains(symbol:str,date:str):
+    response = requests.get('https://sandbox.tradier.com/v1/markets/options/chains',
+                            params={'symbol': symbol, 'expiration': date, 'greeks': 'true'},
+                            headers={'Authorization': api_keys[0], 'Accept': 'application/json'}
+                            )
+    if response.status_code != 200:
+        raise HTTPError("Expected status code: 200 Actual status code: <{}> with reason <{}>".format(
+            response.status_code, response.reason))
+    chains_dict = response.json()['options']
+    if chains_dict is None:
+        message =  "Check symbol and date, got symbol: <{}> and date <{}>".format(symbol, date)
+        raise ValueError(message)
+    chains_list = chains_dict['option']
+    return chains_list
 
 if __name__ == '__main__':
-    one_day_strikes = get_strikes("GOOG",'2020-01-01')
+    dates,strikes = get_option_expirations("GOOG")
+    chains = get_option_chains("GOOG",dates[0])
 
 
