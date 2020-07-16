@@ -3,8 +3,21 @@ import os
 import pandas as pd
 import sys
 import yfinance as yf
-sys.path.append('./appdata/stock_data/day/')
 
+data_dir = '.{0}data{0}stock_data{0}day{0}'
+platform = sys.platform.lower()
+print(platform)
+print("dar" in platform)
+if "dar" not in platform:
+    slash = "\\"
+    data_dir = data_dir.format(slash)
+    os.chdir(".{0}..{0}..{0}".format(slash))
+else:
+    slash = "/"
+    data_dir = data_dir.format(slash)
+
+
+sys.path.append(data_dir)
 
 # from sklearn.model_selection import train_test_split
 
@@ -33,8 +46,10 @@ class Stock():
         self.symbol = symbol
 
     def _set_filepath(self):
-        filepath = "appdata\\stock_data\\day\\{}.csv"
+        filepath = data_dir + "{}.csv"
         self.filepath = filepath.format(self.symbol)
+        print(os.getcwd())
+        print(self.filepath)
 
     def get_data(self):
         return self.data
