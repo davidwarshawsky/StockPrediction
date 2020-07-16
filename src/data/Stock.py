@@ -4,19 +4,38 @@ import pandas as pd
 import sys
 import yfinance as yf
 
-data_dir = '.{0}data{0}stock_data{0}day{0}'
-platform = sys.platform.lower()
-print(platform)
-print("dar" in platform)
-if "dar" not in platform:
-    slash = "\\"
-    data_dir = data_dir.format(slash)
-    os.chdir(".{0}..{0}..{0}".format(slash))
-else:
-    slash = "/"
-    data_dir = data_dir.format(slash)
+def get_slash():
+    platform = sys.platform.lower()
+    if "dar" not in platform:
+        slash = "\\" # Windows
+    else:
+        slash = "/" # Linux or Mac
+    return slash
 
+def cd_wd():
+    """
+    Changes to StockPrediction as the working directory
+    which is the sources root for any module in a subdirectory.
+    :return:
+    """
+    sources_root = 'StockPrediction'
+    slash = get_slash()
+    paths = os.getcwd().split(slash) # List of directories
+    try:
+        target_index = paths.index(sources_root)
+        for _ in range(len(paths) - target_index - 1):
+            os.chdir('..')
+    except ValueError:
+        message = "The root <{}> is not valid".format(sources_root)
+        raise ValueError(message)
 
+cd_wd()
+print(os.getcwd())
+
+slash = get_slash()
+data_dir = '.{0}data{0}stock_data{0}day{0}'.format(slash)
+
+data_dir = data_dir.format(slash)
 sys.path.append(data_dir)
 
 # from sklearn.model_selection import train_test_split
@@ -141,4 +160,5 @@ class Stock():
 
 if __name__ == '__main__':
     stockHandler = Stock()
-    stockHandler.switch_stock("AAPL")
+    stockHandler.switch_stock("GOOG")
+    stockHandler.switch_stock("AMZN")
