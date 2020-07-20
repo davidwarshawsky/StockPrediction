@@ -2,6 +2,14 @@
 import pandas as pd
 import numpy as np
 from sklearn.metrics import accuracy_score
+from datetime import datetime
+
+def validate(date_text):
+    try:
+        datetime.strptime(date_text, '%Y-%m-%d')
+    except ValueError:
+        raise ValueError("Incorrect data format, should be YYYY-MM-DD")
+
 def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
     """
     Frame a time series as a supervised learning dataset.

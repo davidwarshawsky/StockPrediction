@@ -4,6 +4,14 @@ import pandas as pd
 import sys
 import yfinance as yf
 
+
+def is_weekend(date:datetime.date):
+    day_of_week = date.weekday()
+    if day_of_week <= 4:
+        return False
+    else:
+        return True
+
 def get_slash():
     platform = sys.platform.lower()
     if "dar" not in platform:
@@ -30,6 +38,7 @@ def cd_wd():
         raise ValueError(message)
 
 cd_wd()
+from src.features.TS import validate
 print(os.getcwd())
 
 slash = get_slash()
@@ -44,36 +53,129 @@ class Stock():
     """
     A stock data structure to hold stock data
     """
-    symbol: str           = None
-    data:  pd.DataFrame   = None
-    start = None
+
+    _symbol: str           = None
+    _start: datetime.date  = None
+    _path:str              = None
+    up_to_date              = None
+
     def __init__(self,symbol:str=None,start:str='2010-01-01'):
+        # Set the start regardless of if there is a symbol provided.
         self.switch_start(start)
+        # If the symbol is provided, switch to it.
         if symbol is not None:
             self.switch_stock(symbol)
 
+    @property
+    def data(self):
+        return self._all_data.loc[self._start:]
+
+    @property
+    def stop(self):
+        return datetime.date(self.data.index[-1])
+
+    @property
+    def up_to_date(self):
+        if date.today() == self.stop:
+            return True
+        else:
+            return False
+
+    def get_start(self):
+        return datetime.date(self._all_data.index[0])
+
     def switch_stock(self,symbol):
-        self._set_symbol(symbol)
-        self._set_filepath()
-        self._get_stock_data()
-        self._update_data()
+        # Do nothing if you try to switch to the same symbol.
+        if self._symbol == symbol:
+            # For unit testing purposes, return False.
+            return False
+        self.__set_symbol(symbol)
+        self.__set_path()
+        self.__retrieve_data()
+        self.__update_data()
 
     def switch_start(self,start:str='2010-01-01'):
-        self.start = datetime.strptime(start, '%Y-%m-%d')
+        # Check that the date fits the proper format.
+        validate(start)
+        # Extract the date.
+        new_start = datetime.strptime(start, '%Y-%m-%d')
+        # If the date provided is the same as the current date then do nothing.
+        if self._start == new_start:
+            # For unit testing purposes, return False.
+            return False
+        # If the date provided is different than the last, change it to the current date.
+        # Closer to present is larger
+        else:
+            self._start = new_start
 
-    def _set_symbol(self,symbol):
-        self.symbol = symbol
+    def __set_symbol(self,symbol):
+        # Check if the symbol has data available.
+        try:
+            yf.Ticker(symbol).info
+        except ImportError:
+            message = "{} is not a valid yfinance symbol".format(symbol)
+            raise ValueError(message)
+        # If the symbol has available data, set it as the current symbol.
+        self._symbol = symbol
 
-    def _set_filepath(self):
-        filepath = data_dir + "{}.csv"
-        self.filepath = filepath.format(self.symbol)
-        print(os.getcwd())
-        print(self.filepath)
+    def __set_path(self):
+        path:str = data_dir + "{}.csv"
+        self._path = path.format(self._symbol)
 
-    def get_data(self):
-        return self.data
+    def __save_data(self,df,append=False):
+        if not append:
+            df.to_csv(self._path,index=True)
+        else:
+            df.to_csv(self._path, mode="a", index=True, header=False)
 
-    # def get_splits(self,window = 5,test_size = 0.2,target = 'pct',value = 0):
+
+    def __process_data(self, df: pd.DataFrame):
+        return df.rename(columns={'Adj Close': 'Adj_Close'})
+
+    def __retrieve_data(self):
+        #check if data is already available
+        if os.path.isfile(self._path):
+            # Read in all data and select a subset based on the start in case last time
+            # the Stock was called an earlier start date was used.
+            self._all_data = pd.read_csv(self._path,index_col='Date',parse_dates=True)
+            return "r"
+        else:
+            # Load & Select ALL Data, you don't get a choice.
+            # You get to choose a subsection of ALL THE DATA.
+            data = yf.download(self._symbol,rounding=True)
+            self._all_data = self.__process_data(data)
+            # Save the data for later.
+            self.__save_data(self._all_data,append=False)
+            # Return
+            return "w"
+
+
+    def  __update_data(self) -> bool:
+        """
+        Updates stock data to the current date.
+        :return bool: Whether the data got updated.
+        """
+        # If the date of the last index of data is today return False
+        if self.up_to_date:
+            return False
+        # Add one day to the current stop to get a new start.
+        new_start = self.stop + timedelta(days=1)
+        # Get new data based on the new start.
+        new_data = yf.download(self._symbol,start=new_start,rounding=True)
+        new_data = self.__process_data(new_data)
+        """
+        If there is no new data or the last index of the new data
+        is further back than the current data then return False.
+        """
+        if new_data.empty or new_data.index[-1] <= self._all_data.index[-1]:
+            return False
+        # If you have new valid data
+        else:
+            self._all_data = pd.concat([self._all_data,new_data])
+            self.__save_data(new_data,append=True)
+            return True
+
+    # def split(self,window = 5,test_size = 0.2,target = 'pct',value = 0):
     #     """"
     #     window: How many days ahead you want to predict the percent change for.
     #     value: What you would like  to fill nans with.
@@ -102,63 +204,5 @@ class Stock():
     #         X_train, X_test, y_train, y_test = train_test_split(X,y,test_size = test_size)
     #         return X_train, X_test, y_train, y_test
 
-    def _set_start(self):
-        self.start = datetime.date(self.data.index[0])
-
-    def _set_stop(self):
-        self.stop = datetime.date(self.data.index[-1])
-
-
-    def _get_stock_data(self):
-        #check if data is already available
-        if os.path.isfile(self.filepath):
-            print(self.filepath)
-            self.data = pd.read_csv(self.filepath,index_col='Date',parse_dates=True)
-            self.data = self.data.loc[self.start:]
-            self._set_stop()
-            print("Got data from csv")
-        else:
-            # Load & Select Data
-            self.data = yf.download(self.symbol,start=self.start,rounding=True)
-            self.data = self.data.rename(columns={'Adj Close':'Adj_Close'})
-            # Save the data for later use and set the stop index
-            self.data.to_csv(self.filepath,index=True)
-            self._set_stop()
-
-    def  _update_data(self) -> bool:
-        """
-        Updates stock data to the current date.
-        :return bool: Whether the data got updated.
-        """
-        # If the date of the last index of data is today return False
-        if date.today() == self.stop:
-            print("Todays date equals stopping date so didn't update data")
-            return False
-        print("UPDATING")
-        # Add one day to the current stop to get a new start.
-        new_start = self.stop + timedelta(days=1)
-        # Get new data based on the new start.
-        new_data = yf.download(self.symbol,start=new_start,rounding=True)
-        # If there is no new data or the last index of the new data
-        # is further back than the current data then return False.
-        if new_data.empty or new_data.index[-1] <= self.data.index[-1]:
-            print("There is no new data to add")
-            return False
-        # If you have new valid data
-        else:
-            new_data = new_data.rename(columns={'Adj Close': 'Adj_Close'})
-            # Select the new_data from the new_start
-            # new_data = new_data.loc[new_start:]
-            # Save the data for later use
-            new_data.to_csv(self.filepath, mode="a", index=True,header=False)
-            # Add the new data to self.data and drop duplicates just in case.
-            self.data = pd.concat([self.data,new_data]).drop_duplicates()
-            print(self.data.shape)
-            # Set the new stop and return True.
-            self._set_stop()
-            return True
-
-if __name__ == '__main__':
-    stockHandler = Stock()
-    stockHandler.switch_stock("GOOG")
-    stockHandler.switch_stock("AMZN")
+if __name__ == '_main_':
+    pass
