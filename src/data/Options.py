@@ -1,16 +1,33 @@
 import yfinance as yf
 import pandas as pd
 import os
+def cd_wd():
+    """
+    Changes to StockPrediction as the working directory
+    which is the sources root for any module in a subdirectory.
+    :return:
+    """
+    sources_root = 'StockPrediction'
+    paths = os.getcwd().split(os.path.sep) # List of directories
+    try:
+        target_index = paths.index(sources_root)
+        for _ in range(len(paths) - target_index - 1):
+            os.chdir('..')
+    except ValueError:
+        message = "The root <{}> is not valid".format(sources_root)
+        raise ValueError(message)
+
+cd_wd()
 import sys
 import numpy as np
 from datetime import datetime
-sys.path.append('appdata{0}stock_data{0}recommendations{0}')
+sys.path.append('data{0}stock_data{0}options{0}'.format(os.path.sep))
 from src.features.TS import validate
 from src.features.TSDS import TSDS
 
 # https://github.com/mcdallas/wallstreet
 
-class Options(TSDS):
+class Options():
     """
     A stock data structure to hold stock data
     """
@@ -21,6 +38,7 @@ class Options(TSDS):
     _puts_path  = None
     _calls_path = None
     _dates      = None
+    _start      = None
 
     def __init__(self,symbol:str=None,start:str='2010-01-01'):
         """
@@ -49,7 +67,7 @@ class Options(TSDS):
         # Extract the date.
         new_start = datetime.strptime(start, '%Y-%m-%d')
         # If the date provided is the same as the current date then do nothing.
-        if self._start == new_start:
+        if self._start is not None and self._start == new_start:
             # For unit testing purposes, return False.
             return False
         # If the date provided is different than the last, change it to the current date.
@@ -71,7 +89,7 @@ class Options(TSDS):
 
     def __set_path(self):
         # Format the filepath
-        calls_path = "appdata{0}stock_data{0}options{0}c{1}.csv"
+        calls_path = "data{0}stock_data{0}options{0}c{1}.csv"
         puts_path = "data{0}stock_data{0}options{0}p{1}.csv"
         self._calls_path = calls_path.format(os.path.sep,self._symbol)
         self._puts_path = puts_path.format(os.path.sep,self._symbol)
@@ -95,13 +113,12 @@ class Options(TSDS):
             # Setting
             self._puts = self.__process_data(self.__get_puts(chains), dates)
             self._calls = self.__process_data(self.__get_calls(chains), dates)
-            self._set_puts_calls()
-            self._calls, self._puts = self.__get_calls_puts()
             # Save data for later
-            self._puts.to_csv(self._puts_path)
-            self._calls.to_csv(self._calls_path)
+            self.__save_data(self._calls,self._calls_path,append=False)
+            self.__save_data(self._puts,self._puts_path,append=False)
+            return "w"
 
-    def __get_calls_puts(self):
+    def get_calls_puts(self):
         return self._calls,self._puts
 
 
@@ -164,13 +181,17 @@ class Options(TSDS):
         # Get all current available dates for options
         options_dates = self.__get_options_dates(self._ticker)
         # If there are new dates available for options, select them.
-        if not all(x in self._dates for x in options_dates):
+        print(options_dates)
+        print(self._dates)
+        print(set(options_dates).issubset(self._dates))
+        if not set(options_dates).issubset(self._dates):
             # Get dates to update
             new_dates = [x for x in options_dates if x not in self._dates]
             # Add new dates to dates
             self._dates = self._dates.append(new_dates)
             # Get new options and process them
-            new_chains = self._get_options_chains(self._ticker, new_dates)
+            # Get new options and process them
+            new_chains = self.__get_options_chains(self._ticker, new_dates)
 
             new_calls = self.__get_calls(new_chains)
             new_processed_calls = self.__process_data(new_calls, new_dates)
@@ -178,12 +199,21 @@ class Options(TSDS):
             new_processed_puts = self.__process_data(new_puts, new_dates)
 
             # Save new data
-            self.__save_data(new_processed_puts,self._puts_path,append=True)
             self.__save_data(new_processed_calls,self._calls_path,append=True)
+            self.__save_data(new_processed_puts,self._puts_path,append=True)
 
             # Combine dataframes
-            self.puts = pd.concat([self.puts, new_processed_puts])
-            self.calls = pd.concat([self.calls, new_processed_calls])
+            self._puts = pd.concat([self._puts, new_processed_puts])
+            self._calls = pd.concat([self._calls, new_processed_calls])
+
+
+    @property
+    def calls(self):
+        return self._calls
+
+    @property
+    def puts(self):
+        return self._puts
 
     def _get_rec(self,symbol, printit=False):
         ticker = yf.Ticker(symbol)
@@ -197,3 +227,6 @@ class Options(TSDS):
             for array in [firms, to_grades, from_grades, actions]:
                 print(str(array) + space)
         return df
+
+if __name__ == '__main__':
+    optionHandler = Options("AAPL")
