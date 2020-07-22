@@ -38,31 +38,36 @@ class TestInit(object):
         with pytest.raises(ValueError):
             Options(symbol,date)
 
+    def test_bad_symbol_bad_date(self):
+        symbol = "BADARGUMENT"
+        date = "20201-0-01"
+        with pytest.raises(ValueError):
+            Options(symbol, date)
+
 
 class TestSwitchStock(object):
 
-    @pytest.xfail
     def test_default_to_normal(self):
         optionsHandler = Options()
         optionsHandler.switch_stock("GOOG")
-        stock_data = optionsHandler.data
-        column_names = list(stock_data.columns)
-        column_names.sort()
-        expected_column_names = ['Open', 'High', 'Low', 'Close', 'Adj_Close', 'Volume']
-        expected_column_names.sort()
-        stock_data_type = type(stock_data)
-
-        column_message = "Expected column names: <{}> Actual Column names <{}>".format(
-            expected_column_names,
-            column_names
-        )
-        type_message = "Expected data type: <pd.DataFrame()> Actual data type: {} ".format(
-            stock_data_type
+        for x in [optionsHandler.calls,optionsHandler.puts]:
+            column_names = list(x.columns)
+            column_names.sort()
+            expected_column_names = ['strike','lastPrice','bid','ask','change','percentChange','volume','openInterest',
+                                     'impliedVolatility','inTheMoney']
+            expected_column_names.sort()
+            data_type = type(x)
+            column_message = "Expected column names: <{}> Actual Column names <{}>".format(
+                expected_column_names,
+                column_names
             )
-        # Test that the columns are equal to each other.
-        assert sum([x==y for x,y in zip(column_names,expected_column_names)]) == len(expected_column_names), column_message
-        # Test that the data has the correct type.
-        assert stock_data_type == pd.DataFrame, type_message
+            type_message = "Expected data type: <pd.DataFrame()> Actual data type: {} ".format(
+                data_type
+                )
+            # Test that the columns are equal to each other.
+            assert sum([x==y for x,y in zip(column_names,expected_column_names)]) == len(expected_column_names), column_message
+            # Test that the data has the correct type.
+            assert data_type == pd.DataFrame, type_message
 
     def test_default_to_bad(self):
         optionsHandler = Options()
@@ -74,7 +79,7 @@ class TestSwitchStock(object):
         with pytest.raises(ValueError):
             optionsHandler.switch_stock("BADARGUMENT")
 
-    @pytest.xfail
+    @pytest.mark.xfail
     def test_normal_to_normal(self):
         stocks = ["GOOG","NFLX"]
         optionsHandler = Options(stocks[0])
