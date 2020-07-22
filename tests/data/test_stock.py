@@ -13,8 +13,8 @@ class TestInit(object):
         start_message = 'Expected default start date: {}' \
                   'Actual start date: {}'
         assert  actual_start_date == default_start_date,start_message
-        symbol_mesage = "Symbol should be None but is {} ".format(stockHandler._symbol)
-        assert stockHandler._symbol == None, symbol_mesage
+        symbol_message = "Symbol should be None but is {} ".format(stockHandler._symbol)
+        assert stockHandler._symbol is None, symbol_message
 
     def test_symbol(self):
         symbol = "GOOG"
