@@ -12,13 +12,7 @@ def is_weekend(date:datetime.date):
     else:
         return True
 
-def get_slash():
-    platform = sys.platform.lower()
-    if "dar" not in platform:
-        slash = "\\" # Windows
-    else:
-        slash = "/" # Linux or Mac
-    return slash
+
 
 def cd_wd():
     """
@@ -27,8 +21,7 @@ def cd_wd():
     :return:
     """
     sources_root = 'StockPrediction'
-    slash = get_slash()
-    paths = os.getcwd().split(slash) # List of directories
+    paths = os.getcwd().split(os.path.sep) # List of directories
     try:
         target_index = paths.index(sources_root)
         for _ in range(len(paths) - target_index - 1):
@@ -41,10 +34,9 @@ cd_wd()
 from src.features.TS import validate
 print(os.getcwd())
 
-slash = get_slash()
-data_dir = '.{0}data{0}stock_data{0}day{0}'.format(slash)
+data_dir = '.{0}data{0}stock_data{0}day{0}'.format(os.path.sep)
 
-data_dir = data_dir.format(slash)
+data_dir = data_dir.format(os.path.sep)
 sys.path.append(data_dir)
 
 # from sklearn.model_selection import train_test_split
