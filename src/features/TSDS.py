@@ -7,44 +7,37 @@ class TSDS(ABC):
     def __init__(self):
         pass
 
-    def set_target(self,target:str,start:str="2010-01-01"):
-        """
-        Sets parameters for the target to get.
-        :param target: The stock symbol.
-        :param start: The start of when to get data from.
-        :return:
-        """
-        self.target = target
-        self._switch_start(start)
-
-    def _switch_start(self,start:str='2010-01-01'):
-        """
-        Internal function to change the start.
-        :param start: The date of when to start getting data from.
-        :return:
-        """
-        self.start = datetime.strptime(start, '%Y-%m-%d')
-
     @abstractmethod
-    def set_filepath(self):
+    def switch_stock(self):
         pass
 
     @abstractmethod
-    def get_data(self):
+    def switch_start(self):
         pass
 
     @abstractmethod
-    def _set_start(self):
+    def __set_path(self):
         pass
 
     @abstractmethod
-    def _set_stop(self):
-        """
-        An internal function to set the stop
-        :return:
-        """
+    def __set_symbol(self):
         pass
 
     @abstractmethod
-    def _update_data(self) -> bool:
+    def get_start(self):
+        pass
+
+    @abstractmethod
+    def stop(self):
+        pass
+
+    @abstractmethod
+    def __retrieve_data(self) -> str:
+        pass
+
+    @abstractmethod
+    def __update_data(self) -> bool:
+        pass
+    @abstractmethod
+    def __process_data(self):
         pass
