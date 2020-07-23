@@ -79,22 +79,21 @@ class TestSwitchStock(object):
         with pytest.raises(ValueError):
             optionsHandler.switch_stock("BADARGUMENT")
 
-    @pytest.mark.xfail
     def test_normal_to_normal(self):
         stocks = ["GOOG","NFLX"]
         optionsHandler = Options(stocks[0])
-        first_path = optionsHandler._path
-        first_data = optionsHandler.data.to_numpy()
+        first_path = optionsHandler._calls_path
+        first_data = optionsHandler.calls.to_numpy()
         optionsHandler.switch_stock(stocks[1])
 
         symbol_message = "Expected symbol: <{}> Actual symbol: <{}>".format(stocks[1],optionsHandler._symbol)
         assert optionsHandler._symbol == stocks[1],symbol_message
 
-        second_path = optionsHandler._path
+        second_path = optionsHandler._calls_path
         path_message = "Expected path: <{}> Actual path: <{}>".format(first_path,second_path)
         assert first_path != second_path,path_message
 
-        comparison = first_data != optionsHandler.data.to_numpy()
+        comparison = first_data != optionsHandler.calls.to_numpy()
         data_message = "Expected {} dataframe to be different than {} dataframe".format(stocks[0],stocks[1])
         assert comparison.all(),data_message
 
