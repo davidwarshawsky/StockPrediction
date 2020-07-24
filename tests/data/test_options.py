@@ -83,7 +83,7 @@ class TestSwitchStock(object):
         stocks = ["GOOG","NFLX"]
         optionsHandler = Options(stocks[0])
         first_path = optionsHandler._calls_path
-        first_data = optionsHandler.calls.to_numpy()
+        first_data = optionsHandler._calls.to_numpy()
         optionsHandler.switch_stock(stocks[1])
 
         symbol_message = "Expected symbol: <{}> Actual symbol: <{}>".format(stocks[1],optionsHandler._symbol)
@@ -93,22 +93,22 @@ class TestSwitchStock(object):
         path_message = "Expected path: <{}> Actual path: <{}>".format(first_path,second_path)
         assert first_path != second_path,path_message
 
-        comparison = first_data != optionsHandler.calls.to_numpy()
+        comparison = (first_data[:10][:10] == optionsHandler.calls.to_numpy()[:10][:10]).all()
         data_message = "Expected {} dataframe to be different than {} dataframe".format(stocks[0],stocks[1])
-        assert comparison.all(),data_message
+        assert not comparison,data_message
 
 class TestSwitchStart(object):
     def test_default_to_normal(self):
         optionsHandler = Options()
         # Go back in time
         optionsHandler.switch_start("2005-01-01")
-        expected_date = "2010-01-01"
+        expected_date = "2005-01-01"
         actual_date   = optionsHandler._start.strftime("%Y-%m-%d")
-        message = "Date shouldn't be default, Expected: <{}> Actual: <{}".format(
+        message = "Date shouldn't be default, Expected: <{}> Actual: <{}>".format(
             expected_date,
             actual_date
         )
-        assert expected_date != actual_date,message
+        assert expected_date == actual_date,message
 
     def test_default_to_bad(self):
         optionsHandler = Options()
@@ -122,7 +122,9 @@ class TestSwitchStart(object):
 # def test_data():
 if __name__ == "__main__":
     optionsHandler = Options()
-    data = optionsHandler.data
+    optionsHandler.switch_stock("GOOG")
+    optionsHandler.switch_start("2020-07-24")
+    data = optionsHandler.calls
     data_index_length = len(data.index)
     data_index_unique_length = len(data.index.unique())
     message = "Data index is not fully unique. Expected: <{}> Actual <{}>".format(
