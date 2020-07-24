@@ -103,12 +103,18 @@ class Options():
         if os.path.isfile(self._calls_path) and os.path.isfile(self._puts_path):
             self._calls = pd.read_csv(self._calls_path, index_col=[0, 1])
             self._puts = pd.read_csv(self._puts_path, index_col=[0, 1])
-            self._dates = list(self._puts.index.get_level_values(0).unique())
+            self._dates = list(self._calls.index.get_level_values(0).unique())
+            self._puts.index = self._puts.index.set_levels([pd.to_datetime(self._puts.index.levels[0]),
+                                            self._puts.index.levels[1]])
+            self._calls.index = self._calls.index.set_levels([pd.to_datetime(self._calls.index.levels[0]),
+                                                            self._calls.index.levels[1]])
+
             return "r"
         else:
             print("GETTING FRESH")
             # Getting chains
             dates = self.__get_options_dates(self._ticker)
+            self._dates = dates
             chains = self.__get_options_chains(self._ticker, dates)
             # Setting
             self._puts = self.__process_data(self.__get_puts(chains), dates)
@@ -117,9 +123,6 @@ class Options():
             self.__save_data(self._calls,self._calls_path,append=False)
             self.__save_data(self._puts,self._puts_path,append=False)
             return "w"
-
-    def get_calls_puts(self):
-        return self._calls,self._puts
 
 
     def __get_options_dates(self,ticker):
@@ -169,6 +172,11 @@ class Options():
         df['impliedVolatility'] = df['impliedVolatility'].astype(np.int32)
         df = df.drop(columns=['lastTradeDate','contractSymbol', 'contractSize', 'currency'])
         df = df.round(2)
+        # https://stackoverflow.com/questions/18835077/selecting-from-multi-index-pandas/49045951
+        # https://stackoverflow.com/questions/45243291/parse-pandas-multiindex-to-datetime
+        # https://stackoverflow.com/questions/33801584/pandas-multi-index-slicing-level-type-mismatch
+        df.index = df.index.set_levels([pd.to_datetime(df.index.levels[0]),
+                                        df.index.levels[1]])
         return df
 
     def __save_data(self, df, path,append=False):
@@ -181,14 +189,13 @@ class Options():
         # Get all current available dates for options
         options_dates = self.__get_options_dates(self._ticker)
         # If there are new dates available for options, select them.
-        print(options_dates)
-        print(self._dates)
-        print(set(options_dates).issubset(self._dates))
-        if not set(options_dates).issubset(self._dates):
+        new_dates = [x for x in options_dates if x not in self._dates]
+        print("__update_data() new_dates: {}".format(new_dates))
+        if new_dates:
             # Get dates to update
-            new_dates = [x for x in options_dates if x not in self._dates]
             # Add new dates to dates
             self._dates = self._dates.append(new_dates)
+            print("__update_data() self._dates: {}".format(self._dates))
             # Get new options and process them
             # Get new options and process them
             new_chains = self.__get_options_chains(self._ticker, new_dates)
@@ -209,11 +216,13 @@ class Options():
 
     @property
     def calls(self):
-        return self._calls
+        return_calls = self._calls[self._calls.index.get_level_values(0) >= self._start]
+        return return_calls
 
     @property
     def puts(self):
-        return self._puts
+        return_puts = self._puts[self._puts.index.get_level_values(0) >= self._start]
+        return return_puts
 
     def _get_rec(self,symbol, printit=False):
         ticker = yf.Ticker(symbol)
@@ -229,4 +238,6 @@ class Options():
         return df
 
 if __name__ == '__main__':
-    optionHandler = Options("AAPL")
+    optionHandler = Options("NFLX")
+    optionHandler.puts
+    optionHandler.calls
