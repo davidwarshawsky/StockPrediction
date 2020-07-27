@@ -1,4 +1,4 @@
-from src.data.Stock import Stock,slash
+from src.data.Stock import Stock
 from datetime import datetime
 import pytest
 import pandas as pd
