@@ -167,34 +167,53 @@ class Stock():
             self.__save_data(new_data,append=True)
             return True
 
-    # def split(self,window = 5,test_size = 0.2,target = 'pct',value = 0):
-    #     """"
-    #     window: How many days ahead you want to predict the percent change for.
-    #     value: What you would like  to fill nans with.
-    #     """
-    #     if target not in ['pct','diff','shift']:
-    #         raise ValueError('{} is not an acceptable target, use ["pct","diff","shift"]'.format(target))
-    #     elif not (type(window) == int):
-    #         raise ValueError('Window must be an integer')
-    #     elif not (type(test_size) == float):
-    #         raise ValueError('test_size should be a float in range (0,1)')
-    #
-    #     elif (target in ['pct','diff','shift']) & (type(window) == int) & (type(test_size) == float):
-    #         columns = self.data.columns.tolist()
-    #         columns.remove('Adj_Close')
-    #         if target == 'pct':
-    #             y = self.data['Adj_Close'].pct_change(window).shift(-window,fill_value = value)
-    #         elif target == 'diff':
-    #             y = self.data['Adj_Close'].diff(window).shift(-window,fill_value = value)
-    #         elif target == 'shift':
-    #             y = self.data['Adj_Close'].shift(-window,fill_value = value)
-    #
-    #         X = self.data[columns]
-    #         X = X.iloc[:int(self.data.shape[0]-window),:]
-    #         y = y[:int(self.data.shape[0]-window)]
-    #
-    #         X_train, X_test, y_train, y_test = train_test_split(X,y,test_size = test_size)
-    #         return X_train, X_test, y_train, y_test
+    def split_features(self):
+        columns = self._all_data.columns.tolist()
+        print(columns)
+        columns.remove('Adj_Close')
+        X = X = self._all_data[columns]
+        y = self._all_data['Adj_Close']
+        return X, y
+
+    def split(self, transpose=True, window=10, test_size=0.2, target='pct', value=0):
+        """"
+        test_size: Fraction of data that will be used as test/validation sets
+        target: How to generate target data
+        window: How many days ahead you want to predict the percent change for.
+        value: What you would like  to fill nans with.
+        """
+        if target not in ['pct', 'diff', 'shift']:
+            raise ValueError('{} is not an acceptable target, use ["pct","diff","shift"]'.format(target))
+        elif not (type(window) == int):
+            raise ValueError('Window must be an integer')
+        elif not (type(test_size) == float):
+            raise ValueError('test_size should be a float in range (0,1)')
+
+        elif (target in ['pct', 'diff', 'shift']) & (type(window) == int) & (type(test_size) == float):
+            X, y = self.split_features()
+            if target == 'pct':
+                y = y.pct_change(window).shift(-window, fill_value=value)
+            elif target == 'diff':
+                y = y.diff(window).shift(-window, fill_value=value)
+            elif target == 'shift':
+                y = y.shift(-window, fill_value=value)
+
+            train_size = int(X.shape[0] * (1 - test_size))
+            future_features = X.iloc[int(self._all_data.shape[0] - window):, :]
+            X = X.iloc[:int(self._all_data.shape[0] - window), :]
+            y = pd.DataFrame(y[:int(self._all_data.shape[0] - window)])
+
+            X_train, X_test, y_train, y_test = X.iloc[:train_size, :], X.iloc[train_size:, :], y[:train_size], y[
+                                                                                                               train_size:]
+
+            def transpose_df(df):
+                return np.array(df).reshape((df.shape[0], 1, -1))
+
+            if transpose:
+                transposed_dfs = [transpose_df(df) for df in [X_train, X_test, y_train, y_test, future_features]]
+                return transposed_dfs[0], transposed_dfs[1], transposed_dfs[2], transposed_dfs[3], transposed_dfs[4]
+            else:
+                return X_train, X_test, y_train, y_test, future_features
 
 if __name__ == '_main_':
     pass
