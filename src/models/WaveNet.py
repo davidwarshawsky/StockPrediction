@@ -1,9 +1,9 @@
 from src.models.BaseModel import BaseModel
-from keras.models import Model
-from keras.layers import Input, Conv1D, Activation, Dropout, Lambda, Multiply, Add
-from keras.optimizers import Adam
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, Conv1D, Activation, Dropout, Lambda, Multiply, Add
+from tensorflow.keras.optimizers import Adam
 from src.models.modelFunctions import set_model_name
-
+from src.models.tpu_functions import run_on_device
 
 # https://machinelearningmastery.com/multivariate-time-series-forecasting-lstms-keras/
 # https://machinelearningmastery.com/convert-time-series-supervised-learning-problem-python/
@@ -17,12 +17,13 @@ class WaveNet(BaseModel):
         self.n_filters = n_filters
         self.batch_size = batch_size
         self.epochs = epochs
+        self.create_model(input_shape)
 
+    def __create_model(self,input_shape):
         # BUILDS THE MODEL
         n_filters = 20
         filter_width = 5
         dilation_rates = [2 ** i for i in range(7)] * 2
-
         # define an input history series and pass it through a stack of dilated causal convolution blocks
         history_seq = Input(shape=input_shape)
         # self.X_train.shape[1], self.X_train.shape[2])
@@ -74,14 +75,13 @@ class WaveNet(BaseModel):
         pred_seq_train = Lambda(slice, arguments={'seq_length': 66})(out)
 
         model = Model(history_seq, pred_seq_train)
-        model.compile(Adam(), loss='mean_absolute_error')
-        self.model = model
+        return model
 
+    @run_on_device('TPU')
     def fit(self,X_train,y_train,X_test,y_test):
+        self.model = self.__create_model()
+        self.model.compile(Adam(), loss='mean_absolute_error')
         # Implement EarlyStopping and Keras Tuner later.
-        # config = tf.compat.v1.ConfigProto()
-        # config.gpu_options.allow_growth = True
-        # with tf.device('/gpu:0'):
         return self.model.fit(X_train, y_train,batch_size=self.batch_size,
                               epochs=self.epochs,validation_data=(X_test, y_test),shuffle=False)
 
