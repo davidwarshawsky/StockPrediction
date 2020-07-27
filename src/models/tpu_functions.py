@@ -1,5 +1,6 @@
 import tensorflow as tf
 import os
+from functools import wraps
 
 # https://www.tensorflow.org/guide/tpu
 
@@ -9,14 +10,43 @@ tf.config.experimental_connect_to_cluster(resolver)
 tf.tpu.experimental.initialize_tpu_system(resolver)
 print("All devices: ", tf.config.list_logical_devices('TPU'))
 
+
+def run_on_device(device=None):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args,**kwargs):
+            if device == 'TPU' and check_tpu_availability():
+                resolver = tf.distribute.cluster_resolver.TPUClusterResolver(
+                    tpu='grpc://' + os.environ['COLAB_TPU_ADDR'])
+                tf.config.experimental_connect_to_cluster(resolver)
+                # This is the TPU initialization code that has to be at the beginning.
+                tf.tpu.experimental.initialize_tpu_system(resolver)
+                print("All devices: ", tf.config.list_logical_devices('TPU'))
+                strategy = tf.distribute.experimental.TPUStrategy(resolver)
+                with strategy.scope():
+                    return func(*args,**kwargs)
+            elif device == 'GPU':
+                config = tf.compat.v1.ConfigProto()
+                config.gpu_options.allow_growth = True
+                with tf.device('/gpu:0'):
+                    return func(*args,**kwargs)
+            else:
+                return func(*args,**kwargs)
+        return wrapper
+    return decorator
+
+
+
 def check_tpu_availability():
     try:
         device_name = os.environ['COLAB_TPU_ADDR']
         TPU_ADDRESS = 'grpc://' + device_name
         print('Found TPU at: {}'.format(TPU_ADDRESS))
+        return True
 
     except KeyError:
         print('TPU not found')
+        return False
 
 def manual_device_placement_example():
     a = tf.constant([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
@@ -26,6 +56,7 @@ def manual_device_placement_example():
         c = tf.matmul(a, b)
     print("c device: ", c.device)
     print(c)
+
 
 
 def keras_model_to_tpu(model):
@@ -65,11 +96,6 @@ def tpu_config_operation(master,FLAGS):
         tpu_config=tf.contrib.tpu.TPUConfig(FLAGS.iterations,
                                             FLAGS.num_shards),
     )
-
-def set_tpu_optimzer(learning_rate,FLAGS):
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
-    if FLAGS.use_tpu:
-      optimizer = tf.contrib.tpu.CrossShardOptimizer(optimizer)
 
 
 
