@@ -4,11 +4,12 @@ from functools import wraps
 
 # https://www.tensorflow.org/guide/tpu
 
-resolver = tf.distribute.cluster_resolver.TPUClusterResolver(tpu='grpc://' + os.environ['COLAB_TPU_ADDR'])
-tf.config.experimental_connect_to_cluster(resolver)
-# This is the TPU initialization code that has to be at the beginning.
-tf.tpu.experimental.initialize_tpu_system(resolver)
-print("All devices: ", tf.config.list_logical_devices('TPU'))
+def setup_tpu_environment():
+    resolver = tf.distribute.cluster_resolver.TPUClusterResolver(tpu='grpc://' + os.environ['COLAB_TPU_ADDR'])
+    tf.config.experimental_connect_to_cluster(resolver)
+    # This is the TPU initialization code that has to be at the beginning.
+    tf.tpu.experimental.initialize_tpu_system(resolver)
+    print("All devices: ", tf.config.list_logical_devices('TPU'))
 
 
 def run_on_device(device=None):
@@ -16,6 +17,7 @@ def run_on_device(device=None):
         @wraps(func)
         def wrapper(*args,**kwargs):
             if device == 'TPU' and check_tpu_availability():
+                setup_tpu_environment()
                 resolver = tf.distribute.cluster_resolver.TPUClusterResolver(
                     tpu='grpc://' + os.environ['COLAB_TPU_ADDR'])
                 tf.config.experimental_connect_to_cluster(resolver)
