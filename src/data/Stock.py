@@ -75,6 +75,7 @@ class Stock():
 
     def get_start(self):
         return datetime.date(self._all_data.index[0])
+    
 
     def switch_stock(self,symbol):
         # Do nothing if you try to switch to the same symbol.

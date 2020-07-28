@@ -2,7 +2,7 @@ from src.models.BaseModel import BaseModel
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Conv1D, Activation, Dropout, Lambda, Multiply, Add
 from tensorflow.keras.optimizers import Adam
-from src.models.modelFunctions import set_model_name
+from src.models.modelFunctions import create_model_name
 from src.models.tpu_functions import run_on_device
 
 # https://machinelearningmastery.com/multivariate-time-series-forecasting-lstms-keras/
@@ -17,7 +17,7 @@ class WaveNet(BaseModel):
         self.n_filters = n_filters
         self.batch_size = batch_size
         self.epochs = epochs
-        self.create_model(input_shape)
+        self.__create_model(input_shape)
 
     def __create_model(self,input_shape):
         # BUILDS THE MODEL
@@ -77,22 +77,27 @@ class WaveNet(BaseModel):
         model = Model(history_seq, pred_seq_train)
         return model
 
-    @run_on_device('TPU')
+    @run_on_device()
     def fit(self,X_train,y_train,X_test,y_test):
         self.model = self.__create_model()
         self.model.compile(Adam(), loss='mean_absolute_error')
         # Implement EarlyStopping and Keras Tuner later.
         return self.model.fit(X_train, y_train,batch_size=self.batch_size,
-                              epochs=self.epochs,validation_data=(X_test, y_test),shuffle=False)
+                              epochs=self.epochs,verbose=0,validation_data=(X_test, y_test),shuffle=False)
 
-
-    def save(self,symbol:str):
+    def __save_model(self,symbol:str):
         model_json = self.model.to_json()
         # https://stackoverflow.com/questions/16084623/python-is-it-okay-to-pass-self-to-an-external-function
-        model_name = set_model_name(self,symbol)
+        model_name = create_model_name(self, symbol)
         with open(super().base_dir + model_name + ".json", "w") as json_file:
             json_file.write(model_json)
-        # serialize weights to HDF5
+
+    def __save_weights(self,symbol:str):
+        model_name = create_model_name(self, symbol)
         self.model.save_weights(super().base_dir + model_name + ".h5")
+
+    def save(self,symbol:str):
+        self.__save_model(symbol)
+        self.__save_weights(symbol)
 
 

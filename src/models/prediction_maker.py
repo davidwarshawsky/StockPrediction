@@ -3,46 +3,58 @@ from src.models.WaveNet import WaveNet
 import pandas as pd
 from src.data.Stock import Stock
 # from src.features.TS import time_series_split
-from src.models.modelFunctions import get_model_name
+from src.models.modelFunctions import create_model_name
 from datetime import date
 import os
 
 class ModelPredictorSP500():
-    def read_invalid_symbols(self):
-        invalid_path = '..{0}..{0}data{0}invalid_stocks.csv'.format(os.path.sep)
+    prediction_df = None
+    history_df    = None
+    base_dir      = "data{0}stock_data{0}predictions{0}"
+    model_description = str(date.today()) + "&10&20&5&1000&100"
+
+    @staticmethod
+    def read_invalid_symbols():
+        invalid_path = 'data{0}invalid_stocks.csv'.format(os.path.sep)
         with open(invalid_path) as invalid:
             return csv_to_list(invalid)
 
-
-    def read_SP500_symbols(self):
-        invalids = self.read_invalid_symbols()
-        stock_path = '..{0}..{0}data{0}stocks.csv'.format(os.path.sep)
+    @staticmethod
+    def read_SP500_symbols():
+        invalids = ModelPredictorSP500.read_invalid_symbols()
+        stock_path = 'data{0}stocks.csv'.format(os.path.sep)
         with open(stock_path) as csv_file:
             dictionary = csv_to_dict(csv_file)
             return [x for x in list(dictionary) if x not in invalids]
 
 
-    def make_prediction(self,stock: Stock):
-        X_train, X_test, y_train, y_test, future_features = stock.split()
+    def make_prediction(self,X_train,X_test,y_train,y_test,future_features):
         wn = WaveNet(input_shape=(X_train.shape[1], X_train.shape[2]), epochs=1)
         history = wn.fit(X_train, y_train, X_test, y_test)
         return history,wn.predict(future_features)
 
 
-    def make_SP500_preds(self):
-        symbols = self.read_SP500_symbols()
-        predictions_df = pd.DataFrame()
-        history_df     = pd.DataFrame()
+    def make_multiple_preds(self,symbols):
+        self.predictions_df = pd.DataFrame()
+        self.history_df     = pd.DataFrame()
 
         stockHandler = Stock()
         for symbol in symbols:
             stockHandler.switch_stock(symbol)
-            history,predictions = self.make_prediction(stockHandler)
-            predictions_df[symbol] = [round(x[0][0], 3) for x in predictions]
-            history_df[symbol] = history
-        self.save_predictions(predictions_df)
+            history,predictions = self.make_prediction(stockHandler.split())
+            self.prediction_df[symbol] = [round(x[0][0], 3) for x in predictions]
+            self.history_df[symbol] = history
+        self.save_df(self.predictions_df,"sp500preds")
+        self.save_df(self.history_df,"historydf")
 
 
-    def save_predictions(df: pd.DataFrame):
+    def save_df(self,df: pd.DataFrame,label):
         df.to_csv(
-            "data{0}stock_data{0}predictions{0}".format(os.path.sep) + str(date.today()) + "&" + get_model_name().format("SP500") + ".csv")
+            self.base_dir.format(os.path.sep)
+            + label + self.model_description + ".csv"
+        )
+
+def main():
+    modelPredictor = ModelPredictorSP500()
+    symbols = ModelPredictorSP500().read_SP500_symbols()
+    modelPredictor.make_multiple_preds(symbols)
