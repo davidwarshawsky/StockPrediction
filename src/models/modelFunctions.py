@@ -13,7 +13,7 @@ def get_model_name(ask=False,symbol=None):
         model_name = "wn&{}&10&20&5&2048&1"
     return model_name
 
-def set_model_name(model,symbol:str):
+def create_model_name(model,symbol:str):
     model_name = "wn&{}&{}&{}&{}&{}&{}".format(symbol, model.days, model.n_filters, model.filter_width,
                                                model.batch_size, model.epochs)
     return model_name
