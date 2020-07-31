@@ -36,3 +36,9 @@ class FeatureGenerator():
         pred = np.where(pred > 0, 1, 0)
         real = np.where(real > 0, 1, 0)
         return accuracy_score(real, pred)
+    @staticmethod
+    def apply_shifts(df, window=10):
+        for col in df.columns.tolist():
+            for i in range(1, window):
+                df[col + '_' + str(i)] = df[col].shift(-1 * i)
+        return df
