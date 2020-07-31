@@ -1,5 +1,4 @@
-import pytest
-from src.models.prediction_maker import ModelPredictorSP500
+from prediction_maker import ModelPredictorSP500
 class TestReadInvalidSymbols(object):
     def test_len_symbols(self):
         expected_length = 2

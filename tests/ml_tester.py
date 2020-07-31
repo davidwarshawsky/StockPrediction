@@ -1,7 +1,7 @@
 import unittest
 import sys
 sys.path.append('appdata/stock_data/predictions/')
-from src.models.prediction_maker import *
+from prediction_maker import *
 from src.models.prediction_tester import *
 from datetime import timedelta
 
