@@ -1,4 +1,4 @@
-from prediction_maker import ModelPredictorSP500
+from main import ModelPredictorSP500
 class TestReadInvalidSymbols(object):
     def test_len_symbols(self):
         expected_length = 2
