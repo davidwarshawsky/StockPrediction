@@ -105,7 +105,7 @@ class Stock():
         # Check if the symbol has data available.
         try:
             yf.Ticker(symbol).info
-        except ImportError:
+        except:
             message = "{} is not a valid yfinance symbol".format(symbol)
             raise ValueError(message)
         # If the symbol has available data, set it as the current symbol.
