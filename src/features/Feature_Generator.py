@@ -12,10 +12,10 @@ class FeatureGenerator():
         :return:
         """
         for window in windows:
-            X['GapUp_'+str(window)] = (X['Open'].shift(-window).fillna(value = 0) > X['High']).astype(int)
-            X['LapUp_'+str(window)] = (X['Open'].shift(-window).fillna(value = 0) > X['Adj_Close']).astype(int)
-            X['GapUp_Sum_'+str(window)] = (X['GapUp_'+str(window)].rolling(5).aggregate(lambda x : x.sum()))
-            X['LapUp_Sum_'+str(window)] = (X['LapUp_'+str(window)].rolling(5).aggregate(lambda x : x.sum()))
+            X['GapUp_'+str(window)] = (X['Open'].shift(-window).fillna(value = 0) > X['High']).astype(int).shift(window)
+            X['LapUp_'+str(window)] = (X['Open'].shift(-window).fillna(value = 0) > X['Adj_Close']).astype(int).shift(window)
+            X['GapUp_Sum_'+str(window)] = (X['GapUp_'+str(window)].rolling(5).aggregate(lambda x : x.sum())).shift(window)
+            X['LapUp_Sum_'+str(window)] = (X['LapUp_'+str(window)].rolling(5).aggregate(lambda x : x.sum())).shift(window)
         return X
 
     @staticmethod
