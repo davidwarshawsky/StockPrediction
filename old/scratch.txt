@@ -1,0 +1,2 @@
+This folder is still here for the purpose of code dump or storage.
+ While the git is very clean, in regards to the "old" folder, I anticipate this file may be useful.
