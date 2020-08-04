@@ -1,7 +1,6 @@
 from src.data.dictionary import csv_to_dict, csv_to_list
 from src.models.WaveNet import WaveNet
 import pandas as pd
-from src.data.Stock import Stock
 # from src.features.TS import time_series_split
 from src.models.modelFunctions import create_model_name
 from datetime import date
@@ -37,7 +36,7 @@ class ModelPredictorSP500():
     def make_multiple_preds(self,symbols):
         self.predictions_df = pd.DataFrame()
         self.history_df     = pd.DataFrame()
-
+        from src.data.Stock import Stock
         stockHandler = Stock()
         for symbol in symbols:
             stockHandler.switch_stock(symbol)
