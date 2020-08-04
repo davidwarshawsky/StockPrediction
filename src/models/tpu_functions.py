@@ -25,8 +25,6 @@ def configure_for_device(device='GPU'):
             print("GPU memory growth not allowed")
         # https://medium.com/@xianbao.qian/use-xla-with-keras-3ca5d0309c26
         # config = tf.compat.v1.ConfigProto()
-        tf.keras.backend.clear_session()
-        tf.config.optimizer.set_jit(True)  # Enable XLA.
         # https://github.com/tensorflow/tensorflow/blob/v2.3.0/tensorflow/core/protobuf/config.proto
 
 
