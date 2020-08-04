@@ -83,6 +83,8 @@ class WaveNet(BaseModel):
         # Make sure that device is configured for GPU training
         self.model = self.__create_model(self.input_shape)
         self.model.compile(Adam(), loss='mean_absolute_error')
+        tf.keras.backend.clear_session()
+        tf.config.optimizer.set_jit(True)  # Enable XLA.
         with tf.device('/gpu:0'):
             # Implement EarlyStopping and Keras Tuner later.
             return self.model.fit(X_train, y_train,batch_size=self.batch_size,
