@@ -11,6 +11,7 @@ class ModelPredictorSP500():
     history_df    = None
     base_dir      = "data{0}stock_data{0}predictions{0}"
     model_description = str(date.today()) + "&10&20&5&1000&100"
+    history       = None
 
     @staticmethod
     def read_invalid_symbols():
@@ -34,6 +35,7 @@ class ModelPredictorSP500():
 
 
     def make_multiple_preds(self,symbols):
+        # DataFrames for results
         self.prediction_df = pd.DataFrame()
         self.history_df     = pd.DataFrame()
         from src.data.Stock import Stock
@@ -43,9 +45,9 @@ class ModelPredictorSP500():
         for symbol in symbols:
             stockHandler.switch_stock(symbol)
             X_train, X_test, y_train, y_test, future_features = stockHandler.split()
-            history,predictions = self.make_prediction(X_train, X_test, y_train, y_test, future_features)
+            self.history,predictions = self.make_prediction(X_train, X_test, y_train, y_test, future_features)
             self.prediction_df[symbol] = [round(x[0][0], 3) for x in predictions]
-            self.history_df[symbol] = history
+            self.history_df[symbol] = self.history
             self.save_df(self.prediction_df,"sp500preds")
             if i % 10 == 0:
                 print("{} / {}".format(i,symbols_len))
@@ -62,7 +64,10 @@ class ModelPredictorSP500():
 def main():
     modelPredictor = ModelPredictorSP500()
     symbols = ModelPredictorSP500().read_SP500_symbols()
-    modelPredictor.make_multiple_preds(symbols)
+    modelPredictor.make_multiple_preds(['GOOGL'])
+    import pickle as p
+    with open('modelPredictor.p','wb') as f:
+        p.dump(modelPredictor,f)
 
 if __name__ == '__main__':
     main()
