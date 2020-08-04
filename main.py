@@ -38,6 +38,8 @@ class ModelPredictorSP500():
         self.history_df     = pd.DataFrame()
         from src.data.Stock import Stock
         stockHandler = Stock()
+        i=1
+        symbols_len = len(symbols)
         for symbol in symbols:
             stockHandler.switch_stock(symbol)
             X_train, X_test, y_train, y_test, future_features = stockHandler.split()
@@ -45,6 +47,9 @@ class ModelPredictorSP500():
             self.prediction_df[symbol] = [round(x[0][0], 3) for x in predictions]
             self.history_df[symbol] = history
             self.save_df(self.prediction_df,"sp500preds")
+            if i % 10 == 0:
+                print("{} / {}".format(i,symbols_len))
+            i = i + 1
         self.save_df(self.history_df,"historydf")
 
 
