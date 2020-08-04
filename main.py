@@ -47,12 +47,14 @@ class ModelPredictorSP500():
             X_train, X_test, y_train, y_test, future_features = stockHandler.split()
             history,predictions = self.make_prediction(X_train, X_test, y_train, y_test, future_features)
             self.prediction_df[symbol] = [round(x[0][0], 3) for x in predictions]
-            print(history.history['loss'])
+            self.history_df[symbol + '_loss'] = history.history['loss']
+            self.history_df[symbol + '_val_loss'] = history.history['val_loss']
             print(type(history))
             self.save_df(self.prediction_df,"sp500preds")
             if i % 10 == 0:
                 print("{} / {}".format(i,symbols_len))
             i = i + 1
+        self.save_df(self.history_df,'history')
 
 
     def save_df(self,df: pd.DataFrame,label):
