@@ -30,7 +30,7 @@ class ModelPredictorSP500():
     def make_prediction(self,X_train,X_test,y_train,y_test,future_features):
         wn = WaveNet(input_shape=(X_train.shape[1], X_train.shape[2]), epochs=1)
         history = wn.fit(X_train, y_train, X_test, y_test)
-        return history,wn.predict(future_features)
+        return history#,wn.predict(future_features)
 
 
     def make_multiple_preds(self,symbols):
@@ -41,10 +41,10 @@ class ModelPredictorSP500():
         for symbol in symbols:
             stockHandler.switch_stock(symbol)
             X_train, X_test, y_train, y_test, future_features = stockHandler.split()
-            history,predictions = self.make_prediction(X_train, X_test, y_train, y_test, future_features)
-            self.prediction_df[symbol] = [round(x[0][0], 3) for x in predictions]
+            history = self.make_prediction(X_train, X_test, y_train, y_test, future_features) #,predictions
+            # self.prediction_df[symbol] = [round(x[0][0], 3) for x in predictions]
             self.history_df[symbol] = history
-        self.save_df(self.predictions_df,"sp500preds")
+        # self.save_df(self.predictions_df,"sp500preds")
         self.save_df(self.history_df,"historydf")
 
 
