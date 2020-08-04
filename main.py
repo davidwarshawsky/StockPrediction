@@ -34,7 +34,7 @@ class ModelPredictorSP500():
 
 
     def make_multiple_preds(self,symbols):
-        self.predictions_df = pd.DataFrame()
+        self.prediction_df = pd.DataFrame()
         self.history_df     = pd.DataFrame()
         from src.data.Stock import Stock
         stockHandler = Stock()
@@ -44,7 +44,7 @@ class ModelPredictorSP500():
             history,predictions = self.make_prediction(X_train, X_test, y_train, y_test, future_features)
             self.prediction_df[symbol] = [round(x[0][0], 3) for x in predictions]
             self.history_df[symbol] = history
-            self.save_df(self.predictions_df,"sp500preds")
+            self.save_df(self.prediction_df,"sp500preds")
         self.save_df(self.history_df,"historydf")
 
 
