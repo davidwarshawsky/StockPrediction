@@ -17,7 +17,7 @@ class WaveNet(BaseModel):
         self.n_filters = n_filters
         self.batch_size = batch_size
         self.epochs = epochs
-        self.__create_model(input_shape)
+        self.input_shape = input_shape
 
     def __create_model(self,input_shape):
         # BUILDS THE MODEL
@@ -79,7 +79,7 @@ class WaveNet(BaseModel):
 
     @run_on_device()
     def fit(self,X_train,y_train,X_test,y_test):
-        self.model = self.__create_model()
+        self.model = self.__create_model(self.input_shape)
         self.model.compile(Adam(), loss='mean_absolute_error')
         # Implement EarlyStopping and Keras Tuner later.
         return self.model.fit(X_train, y_train,batch_size=self.batch_size,
