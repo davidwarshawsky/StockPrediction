@@ -40,7 +40,8 @@ class ModelPredictorSP500():
         stockHandler = Stock()
         for symbol in symbols:
             stockHandler.switch_stock(symbol)
-            history,predictions = self.make_prediction(stockHandler.split())
+            X_train, X_test, y_train, y_test, future_features = stockHandler.split()
+            history,predictions = self.make_prediction(X_train, X_test, y_train, y_test, future_features)
             self.prediction_df[symbol] = [round(x[0][0], 3) for x in predictions]
             self.history_df[symbol] = history
         self.save_df(self.predictions_df,"sp500preds")
