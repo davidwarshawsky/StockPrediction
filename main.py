@@ -55,6 +55,11 @@ class ModelPredictorSP500():
                 print("{} / {}".format(i,symbols_len))
             i = i + 1
         self.save_df(self.history_df,'history')
+        html = self.prediction_df.to_html()
+        prediction_file = open(self.base_dir.format(os.path.sep) + "predictions.html")
+        prediction_file.write(html)
+        prediction_file.close()
+
 
 
     def save_df(self,df: pd.DataFrame,label):
