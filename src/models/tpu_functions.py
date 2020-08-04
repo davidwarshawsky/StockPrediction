@@ -2,6 +2,7 @@ import tensorflow as tf
 import os
 from functools import wraps
 
+# TENSORFLOW VERSION 2.3.0!!!!!
 # https://www.tensorflow.org/guide/tpu
 
 def setup_tpu_environment():
@@ -13,19 +14,21 @@ def setup_tpu_environment():
 
 def configure_for_device(device='GPU'):
     if device == 'GPU':
+        gpu_devices = tf.config.list_physical_devices('GPU')
+        if gpu_devices:
+            details = tf.config.experimental.get_device_details(gpu_devices[0])
+        try:
+            tf.config.experimental.set_memory_growth(gpu_devices[0], True)
+            assert tf.config.experimental.get_memory_growth(gpu_devices[0])
+        except:
+            # Invalid device or cannot modify virtual devices once initialized.
+            print("GPU memory growth not allowed")
         # https://medium.com/@xianbao.qian/use-xla-with-keras-3ca5d0309c26
         # config = tf.compat.v1.ConfigProto()
-        config = tf.ConfigProto()
+        tf.keras.backend.clear_session()
+        tf.config.optimizer.set_jit(True)  # Enable XLA.
         # https://github.com/tensorflow/tensorflow/blob/v2.3.0/tensorflow/core/protobuf/config.proto
-        # Higher ON_# values use more memmory and might reduce parallelization ability because
-        # it is more aggressive.
-        jit_level = tf.OptimizerOptions.ON_1
-        # THIS IS XLA which is enabling
-        # https: // www.tensorflow.org / xla / tutorials / compile
-        config.graph_options.optimizer_options.global_jit_level = jit_level
-        config.gpu_options.allow_growth = True
-        sess = tf.Session(config=config)
-        tf.keras.backend.set_session(sess)
+
 
 
 
