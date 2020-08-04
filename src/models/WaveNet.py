@@ -77,7 +77,7 @@ class WaveNet(BaseModel):
         model = Model(history_seq, pred_seq_train)
         return model
 
-    @run_on_device()
+    @run_on_device("TPU")
     def fit(self,X_train,y_train,X_test,y_test):
         self.model = self.__create_model(self.input_shape)
         self.model.compile(Adam(), loss='mean_absolute_error')
