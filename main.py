@@ -45,14 +45,14 @@ class ModelPredictorSP500():
         for symbol in symbols:
             stockHandler.switch_stock(symbol)
             X_train, X_test, y_train, y_test, future_features = stockHandler.split()
-            self.history,predictions = self.make_prediction(X_train, X_test, y_train, y_test, future_features)
+            history,predictions = self.make_prediction(X_train, X_test, y_train, y_test, future_features)
             self.prediction_df[symbol] = [round(x[0][0], 3) for x in predictions]
-            self.history_df[symbol] = self.history
+            print(history)
+            print(type(history))
             self.save_df(self.prediction_df,"sp500preds")
             if i % 10 == 0:
                 print("{} / {}".format(i,symbols_len))
             i = i + 1
-        self.save_df(self.history_df,"historydf")
 
 
     def save_df(self,df: pd.DataFrame,label):
@@ -65,9 +65,7 @@ def main():
     modelPredictor = ModelPredictorSP500()
     symbols = ModelPredictorSP500().read_SP500_symbols()
     modelPredictor.make_multiple_preds(['GOOGL'])
-    import pickle as p
-    with open('modelPredictor.p','wb') as f:
-        p.dump(modelPredictor,f)
+
 
 if __name__ == '__main__':
     main()
