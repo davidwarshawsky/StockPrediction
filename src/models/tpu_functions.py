@@ -13,8 +13,22 @@ def setup_tpu_environment():
 
 def configure_for_device(device='GPU'):
     if device == 'GPU':
-        config = tf.compat.v1.ConfigProto()
+        # https://medium.com/@xianbao.qian/use-xla-with-keras-3ca5d0309c26
+        # config = tf.compat.v1.ConfigProto()
+        assert (tf.test.is_gpu_available())
+        config = tf.ConfigProto()
+        # https://github.com/tensorflow/tensorflow/blob/v2.3.0/tensorflow/core/protobuf/config.proto
+        # Higher ON_# values use more memmory and might reduce parallelization ability because
+        # it is more aggressive.
+        jit_level = tf.OptimizerOptions.ON_1
+        # THIS IS XLA which is enabling
+        # https: // www.tensorflow.org / xla / tutorials / compile
+        config.graph_options.optimizer_options.global_jit_level = jit_level
         config.gpu_options.allow_growth = True
+        sess = tf.Session(config=config)
+        tf.keras.backend.set_session(sess)
+
+
 
 
 # def run_on_device(device=None):

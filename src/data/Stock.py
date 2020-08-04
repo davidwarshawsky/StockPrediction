@@ -173,7 +173,6 @@ class Stock():
 
     def split_features(self):
         columns = self._all_data.columns.tolist()
-        print(columns)
         columns.remove('Adj_Close')
         X = X = self._all_data[columns]
         y = self._all_data['Adj_Close']
