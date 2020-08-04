@@ -1,7 +1,6 @@
 from src.data.dictionary import csv_to_dict, csv_to_list
 from src.models.WaveNet import WaveNet
 import pandas as pd
-from src.data.Stock import Stock
 # from src.features.TS import time_series_split
 from src.models.modelFunctions import create_model_name
 from datetime import date
@@ -35,16 +34,22 @@ class ModelPredictorSP500():
 
 
     def make_multiple_preds(self,symbols):
-        self.predictions_df = pd.DataFrame()
+        self.prediction_df = pd.DataFrame()
         self.history_df     = pd.DataFrame()
-
+        from src.data.Stock import Stock
         stockHandler = Stock()
+        i=1
+        symbols_len = len(symbols)
         for symbol in symbols:
             stockHandler.switch_stock(symbol)
-            history,predictions = self.make_prediction(stockHandler.split())
+            X_train, X_test, y_train, y_test, future_features = stockHandler.split()
+            history,predictions = self.make_prediction(X_train, X_test, y_train, y_test, future_features)
             self.prediction_df[symbol] = [round(x[0][0], 3) for x in predictions]
             self.history_df[symbol] = history
-        self.save_df(self.predictions_df,"sp500preds")
+            self.save_df(self.prediction_df,"sp500preds")
+            if i % 10 == 0:
+                print("{} / {}".format(i,symbols_len))
+            i = i + 1
         self.save_df(self.history_df,"historydf")
 
 

@@ -11,31 +11,36 @@ def setup_tpu_environment():
     tf.tpu.experimental.initialize_tpu_system(resolver)
     print("All devices: ", tf.config.list_logical_devices('TPU'))
 
+def configure_for_device(device='GPU'):
+    if device == 'GPU':
+        config = tf.compat.v1.ConfigProto()
+        config.gpu_options.allow_growth = True
 
-def run_on_device(device=None):
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args,**kwargs):
-            if device == 'TPU' and check_tpu_availability():
-                setup_tpu_environment()
-                resolver = tf.distribute.cluster_resolver.TPUClusterResolver(
-                    tpu='grpc://' + os.environ['COLAB_TPU_ADDR'])
-                tf.config.experimental_connect_to_cluster(resolver)
-                # This is the TPU initialization code that has to be at the beginning.
-                tf.tpu.experimental.initialize_tpu_system(resolver)
-                print("All devices: ", tf.config.list_logical_devices('TPU'))
-                strategy = tf.distribute.experimental.TPUStrategy(resolver)
-                with strategy.scope():
-                    return func(*args,**kwargs)
-            elif device == 'GPU':
-                config = tf.compat.v1.ConfigProto()
-                config.gpu_options.allow_growth = True
-                with tf.device('/gpu:0'):
-                    return func(*args,**kwargs)
-            else:
-                return func(*args,**kwargs)
-        return wrapper
-    return decorator
+
+# def run_on_device(device=None):
+#     def decorator(func):
+#         @wraps(func)
+#         def wrapper(*args,**kwargs):
+#             if device == 'TPU' and check_tpu_availability():
+#                 setup_tpu_environment()
+#                 resolver = tf.distribute.cluster_resolver.TPUClusterResolver(
+#                     tpu='grpc://' + os.environ['COLAB_TPU_ADDR'])
+#                 tf.config.experimental_connect_to_cluster(resolver)
+#                 # This is the TPU initialization code that has to be at the beginning.
+#                 tf.tpu.experimental.initialize_tpu_system(resolver)
+#                 print("All devices: ", tf.config.list_logical_devices('TPU'))
+#                 strategy = tf.distribute.experimental.TPUStrategy(resolver)
+#                 with strategy.scope():
+#                     return func(*args,**kwargs)
+#             elif device == 'GPU':
+#                 config = tf.compat.v1.ConfigProto()
+#                 config.gpu_options.allow_growth = True
+#                 with tf.device('/gpu:0'):
+#                     return func(*args,**kwargs)
+#             else:
+#                 return func(*args,**kwargs)
+#         return wrapper
+#     return decorator
 
 
 
