@@ -15,7 +15,6 @@ def configure_for_device(device='GPU'):
     if device == 'GPU':
         # https://medium.com/@xianbao.qian/use-xla-with-keras-3ca5d0309c26
         # config = tf.compat.v1.ConfigProto()
-        assert (tf.test.is_gpu_available())
         config = tf.ConfigProto()
         # https://github.com/tensorflow/tensorflow/blob/v2.3.0/tensorflow/core/protobuf/config.proto
         # Higher ON_# values use more memmory and might reduce parallelization ability because
