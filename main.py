@@ -47,7 +47,7 @@ class ModelPredictorSP500():
             X_train, X_test, y_train, y_test, future_features = stockHandler.split()
             history,predictions = self.make_prediction(X_train, X_test, y_train, y_test, future_features)
             self.prediction_df[symbol] = [round(x[0][0], 3) for x in predictions]
-            print(history)
+            print(history.history['loss'])
             print(type(history))
             self.save_df(self.prediction_df,"sp500preds")
             if i % 10 == 0:
