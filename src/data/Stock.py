@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import sys
 import yfinance as yf
+from main import ModelPredictorSP500
 
 
 def is_weekend(date:datetime.date):
@@ -49,9 +50,11 @@ class Stock():
     _symbol: str           = None
     _start: datetime.date  = None
     _path:str              = None
-    up_to_date              = None
+    up_to_date             = None
+    valid_symbols          = None
 
     def __init__(self,symbol:str=None,start:str='2010-01-01'):
+        self.valid_symbols = ModelPredictorSP500.read_SP500_symbols()
         # Set the start regardless of if there is a symbol provided.
         self.switch_start(start)
         # If the symbol is provided, switch to it.
@@ -103,13 +106,12 @@ class Stock():
 
     def __set_symbol(self,symbol):
         # Check if the symbol has data available.
-        try:
-            yf.Ticker(symbol).info
-        except:
+        if symbol in self.valid_symbols:
+            self._symbol = symbol
+        else:
             message = "{} is not a valid yfinance symbol".format(symbol)
             raise ValueError(message)
-        # If the symbol has available data, set it as the current symbol.
-        self._symbol = symbol
+
 
     def __set_path(self):
         path:str = data_dir + "{}.csv"
