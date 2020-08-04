@@ -66,7 +66,7 @@ class ModelPredictorSP500():
 def main():
     modelPredictor = ModelPredictorSP500()
     symbols = ModelPredictorSP500().read_SP500_symbols()
-    modelPredictor.make_multiple_preds(['GOOGL'])
+    modelPredictor.make_multiple_preds(symbols)
 
 
 if __name__ == '__main__':
