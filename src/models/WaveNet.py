@@ -3,12 +3,14 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Conv1D, Activation, Dropout, Lambda, Multiply, Add
 from tensorflow.keras.optimizers import Adam
 from src.models.modelFunctions import create_model_name
-from src.models.tpu_functions import run_on_device
-
+from src.models.tpu_functions import configure_for_device
+import tensorflow as tf
 # https://machinelearningmastery.com/multivariate-time-series-forecasting-lstms-keras/
 # https://machinelearningmastery.com/convert-time-series-supervised-learning-problem-python/
 # https://machinelearningmastery.com/how-to-develop-lstm-models-for-time-series-forecasting/
 
+# Make sure configuration is only done once.
+configure_for_device('GPU')
 class WaveNet(BaseModel):
     def __init__(self, input_shape:tuple,days=10, n_filters=20, filter_width=5, batch_size=1000, epochs=100):
         super().__init__()
@@ -77,12 +79,13 @@ class WaveNet(BaseModel):
         model = Model(history_seq, pred_seq_train)
         return model
 
-    @run_on_device("GPU")
     def fit(self,X_train,y_train,X_test,y_test):
+        # Make sure that device is configured for GPU training
         self.model = self.__create_model(self.input_shape)
         self.model.compile(Adam(), loss='mean_absolute_error')
-        # Implement EarlyStopping and Keras Tuner later.
-        return self.model.fit(X_train, y_train,batch_size=self.batch_size,
+        with tf.device('/gpu:0'):
+            # Implement EarlyStopping and Keras Tuner later.
+            return self.model.fit(X_train, y_train,batch_size=self.batch_size,
                               epochs=self.epochs,verbose=0,validation_data=(X_test, y_test),shuffle=False)
 
     def __save_model(self,symbol:str):
