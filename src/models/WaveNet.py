@@ -90,6 +90,14 @@ class WaveNet(BaseModel):
             return self.model.fit(X_train, y_train,batch_size=self.batch_size,
                               epochs=self.epochs,verbose=0,validation_data=(X_test, y_test),shuffle=False)
 
+    def loss(self):
+        wavenet_loss = self.model.history.history['loss']
+        return wavenet_loss
+
+    def val_loss(self):
+         wavenet_val_loss = self.model.history.history['val_loss']
+         return wavenet_val_loss
+
     def __save_model(self,symbol:str):
         model_json = self.model.to_json()
         # https://stackoverflow.com/questions/16084623/python-is-it-okay-to-pass-self-to-an-external-function
