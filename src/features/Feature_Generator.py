@@ -32,9 +32,9 @@ class FeatureGenerator():
             for mean in local_means:
                 local_groups = np.array_split(base, window)
     @staticmethod
-    def categorical(pred, real):
-        pred = np.where(pred > 0, 1, 0)
-        real = np.where(real > 0, 1, 0)
+    def categorical(pred, real, threshold = 0):
+        pred = np.where(pred > threshold, 1, 0)
+        real = np.where(real > threshold, 1, 0)
         return accuracy_score(real, pred)
     @staticmethod
     def apply_shifts(df, window=10):
