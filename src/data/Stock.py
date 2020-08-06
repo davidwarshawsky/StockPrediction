@@ -68,7 +68,6 @@ class Stock():
                                symbols.loc[i, 'Symbol'] not in invalid_stocks]
 
         self.valid_symbols = symbols.loc[Valid_Stock_Indexes, 'Symbol'].tolist()
-        print(self.valid_symbols)
         # Set the start regardless of if there is a symbol provided.
         self.switch_start(start)
         # If the symbol is provided, switch to it.

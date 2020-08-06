@@ -49,8 +49,6 @@ class ModelPredictorSP500():
             X_train, X_test, y_train, y_test, future_features = stockHandler.split(X, y, transpose=True, window=10)
             history,predictions = self.make_prediction(X_train, X_test, y_train, y_test, future_features)
             self.prediction_df[symbol] = [round(x[0][0], 3) for x in predictions]
-            print(len(history.loss()))
-            print(len(history.val_loss()))
             self.history_df[symbol + '_loss'] = history.loss()
             self.history_df[symbol + '_val_loss'] = history.val_loss()
             print(type(history))
