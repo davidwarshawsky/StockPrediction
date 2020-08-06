@@ -5,12 +5,14 @@ from tensorflow.keras.optimizers import Adam
 from src.models.modelFunctions import create_model_name
 from src.models.tpu_functions import configure_for_device
 import tensorflow as tf
+from src.features.Feature_Generator import FeatureGenerator
+from src.data.Stock import Stock
 # https://machinelearningmastery.com/multivariate-time-series-forecasting-lstms-keras/
 # https://machinelearningmastery.com/convert-time-series-supervised-learning-problem-python/
 # https://machinelearningmastery.com/how-to-develop-lstm-models-for-time-series-forecasting/
 
 # Make sure configuration is only done once.
-configure_for_device('GPU')
+# configure_for_device('GPU')
 class WaveNet(BaseModel):
     def __init__(self, input_shape:tuple,days=10, n_filters=20, filter_width=5, batch_size=1000, epochs=100):
         super().__init__()
@@ -85,10 +87,10 @@ class WaveNet(BaseModel):
         self.model.compile(Adam(), loss='mean_absolute_error')
         tf.keras.backend.clear_session()
         tf.config.optimizer.set_jit(True)  # Enable XLA.
-        with tf.device('/gpu:0'):
-            # Implement EarlyStopping and Keras Tuner later.
-            return self.model.fit(X_train, y_train,batch_size=self.batch_size,
-                              epochs=self.epochs,verbose=0,validation_data=(X_test, y_test),shuffle=False)
+        # with tf.device('/gpu:0'):
+        # Implement EarlyStopping and Keras Tuner later.
+        return self.model.fit(X_train, y_train,batch_size=self.batch_size,
+                          epochs=self.epochs,verbose=0,validation_data=(X_test, y_test),shuffle=False)
 
     def loss(self):
         wavenet_loss = self.model.history.history['loss']
@@ -112,5 +114,25 @@ class WaveNet(BaseModel):
     def save(self,symbol:str):
         self.__save_model(symbol)
         self.__save_weights(symbol)
+
+# def get(ticker = 'A'):
+#     time_frame = 20
+#     window = 40
+#     Handler = Stock(ticker)
+#     X = Handler._all_data
+#     y = Handler.create_target(X,window = window)
+#     FG = FeatureGenerator()
+#     X = FG.shifts(X,window = window,time_frame = time_frame)
+#     X_train, X_test, y_train, y_test, future_features = Handler.split(X,y,transpose=True, window = time_frame)
+#     return X_train, X_test, y_train, y_test, future_features
+# def main():
+#     X_train, X_test, y_train, y_test, future_features = get()
+#     wn = WaveNet((X_train.shape[1],X_train.shape[2]))
+#     wn.fit(X_train, y_train,X_test, y_test)
+#     print(wn.loss())
+#     print(wn.val_loss())
+#
+# if __name__ == '__main__':
+#     main()
 
 

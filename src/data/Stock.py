@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import sys
 import yfinance as yf
-from main import ModelPredictorSP500
+# from main import ModelPredictorSP500
 
 
 def is_weekend(date:datetime.date):
@@ -55,7 +55,20 @@ class Stock():
     valid_symbols          = None
 
     def __init__(self,symbol:str=None,start:str='2010-01-01'):
-        self.valid_symbols = ModelPredictorSP500.read_SP500_symbols()
+        # self.valid_symbols = ModelPredictorSP500.read_SP500_symbols()
+        table = pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
+        symbols = table[0]
+
+        for i, comp in enumerate(symbols['Symbol'].tolist()):
+            if '.' in symbols.loc[i, 'Symbol']:
+                symbols.loc[i, 'Symbol'] = symbols.loc[i, 'Symbol'].replace('.', '-')
+
+        invalid_stocks = ['CARR', 'CTVA', 'DOW', 'FOX', 'FOXA', 'HWM', 'OTIS', 'TT', 'VIAC']
+        Valid_Stock_Indexes = [i for i, x in enumerate(symbols['Symbol']) if
+                               symbols.loc[i, 'Symbol'] not in invalid_stocks]
+
+        self.valid_symbols = symbols.loc[Valid_Stock_Indexes, 'Symbol'].tolist()
+        print(self.valid_symbols)
         # Set the start regardless of if there is a symbol provided.
         self.switch_start(start)
         # If the symbol is provided, switch to it.

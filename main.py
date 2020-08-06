@@ -29,26 +29,30 @@ class ModelPredictorSP500():
 
 
     def make_prediction(self,X_train,X_test,y_train,y_test,future_features):
-        wn = WaveNet(input_shape=(X_train.shape[1], X_train.shape[2]), epochs=1)
-        history = wn.fit(X_train, y_train, X_test, y_test)
-        return history,wn.predict(future_features)
+        wn = WaveNet(input_shape=(X_train.shape[1], X_train.shape[2]), epochs=2)
+        wn.fit(X_train, y_train, X_test, y_test)
+        return wn,wn.predict(future_features)
 
 
     def make_multiple_preds(self,symbols):
         # DataFrames for results
         self.prediction_df = pd.DataFrame()
-        self.history_df     = pd.DataFrame()
+        self.history_df = pd.DataFrame()
         from src.data.Stock import Stock
         stockHandler = Stock()
         i=1
         symbols_len = len(symbols)
         for symbol in symbols:
             stockHandler.switch_stock(symbol)
-            X_train, X_test, y_train, y_test, future_features = stockHandler.split()
+            X = stockHandler._all_data
+            y = stockHandler.create_target(X, window=10)
+            X_train, X_test, y_train, y_test, future_features = stockHandler.split(X, y, transpose=True, window=10)
             history,predictions = self.make_prediction(X_train, X_test, y_train, y_test, future_features)
             self.prediction_df[symbol] = [round(x[0][0], 3) for x in predictions]
-            self.history_df[symbol + '_loss'] = history.history['loss']
-            self.history_df[symbol + '_val_loss'] = history.history['val_loss']
+            print(len(history.loss()))
+            print(len(history.val_loss()))
+            self.history_df[symbol + '_loss'] = history.loss()
+            self.history_df[symbol + '_val_loss'] = history.val_loss()
             print(type(history))
             self.save_df(self.prediction_df,"sp500preds")
             if i % 10 == 0:
@@ -70,7 +74,7 @@ class ModelPredictorSP500():
 
 def main():
     modelPredictor = ModelPredictorSP500()
-    symbols = ModelPredictorSP500().read_SP500_symbols()
+    symbols = ModelPredictorSP500().read_SP500_symbols()[:2]
     modelPredictor.make_multiple_preds(symbols)
 
 
