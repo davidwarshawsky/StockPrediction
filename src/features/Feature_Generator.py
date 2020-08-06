@@ -37,8 +37,12 @@ class FeatureGenerator():
         real = np.where(real > threshold, 1, 0)
         return accuracy_score(real, pred)
     @staticmethod
-    def apply_shifts(df, window=10):
+    def mae(pred, real):
+        return mean_absolute_error(real, pred)
+    @staticmethod
+    def shifts(df,target = 'pct', window =40, time_frame =20):
         for col in df.columns.tolist():
-            for i in range(1, window):
-                df[col + '_' + str(i)] = df[col].shift(-1 * i)
+            for i in range(1, window - time_frame):
+                df[col + '_' + str(i)] = df[col].pct_change(periods=1* i).shift(-1 * i)
+        df.drop(['Open', 'High', 'Low', 'Close', 'Adj_Close'], axis=1, inplace=True)
         return df
