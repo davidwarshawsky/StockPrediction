@@ -32,51 +32,87 @@ def send_email(email):
         smtp_server.login(email_address, email_password)
         smtp_server.send_message(email)
 
-def create_html_email_from_df(df1,df2):
-    # https: // docs.python.org / 3.7 / library / email.examples.html
-    to_addresses = (Address("David Warshawsky", "davidawarshawsky", "gmail.com"),
-                 Address("Elad Warshawsky", "eladwarshawsky", "gmail.com"),
-                 Address("Ron Warshawsky", "ron", "memfix.com"))
+def create_html_email_from_df(name,email,df1,df2):
     msg = MIMEMultipart()
-    msg['Subject'] = "AppliedMarkets predictions"
-    msg['From'] = "AppliedMarkets"#Address("Applied Market ", "thatdoovie", "gmail.com")
-    msg['To'] = "davidawarshawsky@gmail.com"
+    msg['Subject'] = "AppliedMarkets Predictions"
+    msg['From'] = "AppliedMarkets"
+    msg['To'] = email
     # https://stackoverflow.com/questions/46620604/python-mime-attaching-multiple-attachments-to-a-multipart-message
     # The above link explains that the reason you can't send MimeMultipart with multiple text and html is because the last
     # part to be attached is the one considered that you want to add. If the HTML fails then at least the text is shown.
     # This does not mean that you can put text1,html2,text3,html4 into the email.
     # https://stackoverflow.com/questions/50564407/pandas-send-email-containing-dataframe-as-a-visual-table
+    title = 'Biggest Predicted Adjusted Close Stock Price 10 Days From 08/04/2020'
     intro = """
-    Hi David,
-    Our predictions are state of the art in Machine Learning. The predictions below are split into two sections:<br>
-    1. The predicted percent change change of the adjusted close of stocks 10 market days from Tuesday 08-04-2020<br>
-    end of day ordered from top to bottom by largest increase in adjusted close.<br>
-    2. The predicted percent change change of the adjusted close of stocks 10 market days from Tuesday 08-04-2020<br>
-    end of day ordered from top to bottom by largest decrease in adjusted close.<br>
-    Section 1):<br>
+    Hi {0},<br>
+    Our predictions use state of the art Artificial Intelligence(AI) models to attempt to predict the stock market.
+     The predictions below are split into two sections:<br>"""\
+        .format(name)
+    ordered_list = """
+    <ol>
+        <li>The predicted increase percent change of the adjusted close of stocks 10 market days from the end of trading
+        day Tuesday 08-04-2020<br>. They are ordered from top to bottom by largest percent increase in adjusted close.</li>
+    
+        <li>The predicted decrease percent change of the adjusted close of stocks 10 market days from the end of trading
+        day Tuesday 08-04-2020<br>. They are ordered from top to bottom by largest percent decrease in adjusted close.</li>
+    </ol>
     """
-    section_two = "<br>Section 2):<br>"
+    section_one = "Section 1):"
+    section_two = "Section 2):<br>"
 
     end = """<br>
     We would appreciate any feedback on our Website http://localhost<br>
     Best Regards, <br>
-    David Warshawsky<br><br>
+    David Warshawsky and Elad Warshawsky<br><br>
     Disclaimer: This is purely for entertainment and does not constitute financial advice.
     """
     text = intro + df1.to_string() + section_two + df2.to_string() + end
     general = """\
+        <!DOCTYPE html>
         <html>
-          <head></head>
+          <head>
+            <meta charset="UTF-8">
+            <style>
+                table {float: left; font-size: 20px;font-weight:bold}
+                p {font-size: 18px;}
+                ol {font-size: 22px;}
+                .float-container {padding: 20px; width: 100%%;}
+                .float-child1 {float: left;}
+                .float-child2 {float: left; margin-left: 100px;}
+            </style>
+            <!-- Title -->
+            <title>%s</title>
+          </head>
           <body>
-            <p>{}</p>
-            {}
-            <p>{}</p>
-            {}
-            <p>{}</p>
+            <div>
+                <!-- Intro  -->
+                <p>%s</p>
+                %s
+                <!-- Two tables side by side -->
+                <div class = "float-container">
+                    <div class = "float-child1">
+                        <h1>%s</h1>
+                        %s
+                    </div>
+                    <div class = "float-child2">
+                        <h1>%s</h1>
+                        %s
+                    </div>
+                </div>
+                <div>
+                    <!-- Ending statement -->
+                    <p><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>%s</p>
+                </div>
+            </div>
           </body>
         </html>
         """
-    html = general.format(intro,df1.to_html(),section_two,df2.to_html(),end)
+    html = general % (title,intro,ordered_list,section_one,df1.to_html(),section_two,df2.to_html(),end)
+    print(os.getcwd())
+    pred_email_path = '..{0}infrastructure{0}pred_email.html'.format(os.path.sep)
+    with open(pred_email_path,'w') as pred_email:
+        pred_email.write(html)
+
 
     # part1 = MIMEText(text,"plain")
     part2 = MIMEText(html, 'html')
@@ -133,10 +169,12 @@ def get_zero(df):
 
 def main():
     preds = prediction_df_transformer()
-    pos_preds = get_positive(preds)
-    neg_preds = get_negative(preds)
-    email = create_html_email_from_df(pos_preds,neg_preds)
-    send_email(email)
+    pos_preds = get_positive(preds).head(10)
+    neg_preds = get_negative(preds).head(10)
+    # email = create_html_email_from_df('Ron',"ron@memfix.com",pos_preds,neg_preds)
+    # email = create_html_email_from_df('Elad', "eladwarshawsky@gmail.com", pos_preds, neg_preds)
+    email = create_html_email_from_df('David','davidawarshawsky@gmail.com',pos_preds,neg_preds)
+    # send_email(email)
 
 if __name__ == '__main__':
     main()
